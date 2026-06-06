@@ -1,12 +1,13 @@
-import { createServerClient } from '@/lib/supabase-server'
 import { auth } from '@clerk/nextjs/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, MapPin, DollarSign, Calendar, Users, FileText } from 'lucide-react'
+import { ArrowLeft, MapPin, DollarSign, Calendar, Users, FileText, Plus } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { readDatabase } from '@/lib/data-store'
+import InterviewLinks from '@/components/interview-links-display'
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -16,27 +17,19 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
     notFound()
   }
 
-  const supabase = createServerClient()
-
-  const contextId = orgId || await (async () => {
-    const { data: user } = await (supabase as any)
-      .from('users')
-      .select('org_id')
-      .eq('id', userId)
-      .single()
-    return user?.org_id || userId
-  })()
-
-  const { data: job } = await (supabase as any)
-    .from('jobs')
-    .select('*')
-    .eq('id', id)
-    .eq('org_id', contextId)
-    .single()
-
+  // Fetch actual job from database
+  const db = await readDatabase()
+  const job = db.jobs.find(j => j.id === id)
+  
   if (!job) {
     notFound()
   }
+
+  // Fetch interviews for this job
+  const interviews = db.interviews.filter(i => {
+    const app = db.applications.find(a => a.id === i.applicationId)
+    return app && app.jobId === id
+  }) || []
 
   return (
     <div className="space-y-6">
@@ -57,19 +50,19 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <MapPin className="w-4 h-4" />
               {job.location}
             </span>
-            {job.salary_min && job.salary_max && (
+            {(job.salaryMin || job.salary_min) && (job.salaryMax || job.salary_max) && (
               <span className="flex items-center gap-1">
                 <DollarSign className="w-4 h-4" />
-                {formatCurrency(job.salary_min)} - {formatCurrency(job.salary_max)}
+                {formatCurrency(job.salaryMin || job.salary_min)} - {formatCurrency(job.salaryMax || job.salary_max)}
               </span>
             )}
             <span className="flex items-center gap-1">
               <Calendar className="w-4 h-4" />
-              Posted {formatDate(job.created_at)}
+              Posted {formatDate(job.createdAt || job.created_at || job.created)}
             </span>
             <span className="flex items-center gap-1">
               <Users className="w-4 h-4" />
-              0 applicants
+              {interviews.length} interview{interviews.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
@@ -111,6 +104,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               </div>
             </CardContent>
           </Card>
+
+          {/* Interviews Section */}
+          <InterviewLinks interviews={interviews} />
         </div>
 
         <div className="space-y-6">
@@ -127,15 +123,15 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 <span className="text-muted-foreground">Location</span>
                 <span>{job.location}</span>
               </div>
-              {job.salary_min && job.salary_max && (
+              {(job.salaryMin || job.salary_min) && (job.salaryMax || job.salary_max) && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Salary</span>
-                  <span>{formatCurrency(job.salary_min)} - {formatCurrency(job.salary_max)}</span>
+                  <span>{formatCurrency(job.salaryMin || job.salary_min)} - {formatCurrency(job.salaryMax || job.salary_max)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Created</span>
-                <span>{formatDate(job.created_at)}</span>
+                <span>{formatDate(job.createdAt || job.created_at || job.created)}</span>
               </div>
             </CardContent>
           </Card>
@@ -145,15 +141,16 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              <Link href={`/dashboard/jobs/${job.id}/new`} className="block">
+                <Button className="w-full gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create Interview
+                </Button>
+              </Link>
               <Link href={`/dashboard/jobs/${job.id}/applicants`} className="block">
                 <Button variant="outline" className="w-full gap-2">
                   <Users className="w-4 h-4" />
                   View Applicants
-                </Button>
-              </Link>
-              <Link href={`/jobs/${job.id}`} className="block">
-                <Button variant="outline" className="w-full gap-2">
-                  Public Preview
                 </Button>
               </Link>
             </CardContent>

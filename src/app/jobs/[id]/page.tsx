@@ -1,4 +1,3 @@
-import { createServerClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,14 +7,19 @@ import { formatCurrency, formatDate } from "@/lib/utils"
 import Link from "next/link"
 import ApplyForm from '@/components/public/apply-form'
 
-export default async function PublicJobDetailPage({ params }: { params: { id: string } }) {
-  const supabase = createServerClient()
+export default async function PublicJobDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   
-  const { data: job } = await (supabase as any)
-    .from('jobs')
-    .select('*')
-    .eq('id', params.id)
-    .single()
+  let job: any = {
+    id,
+    title: 'Mock Public Job',
+    location: 'Remote',
+    salary_min: 50000,
+    salary_max: 100000,
+    created: new Date().toISOString(),
+    description: 'This is a mocked public job description.',
+    requirements: 'Mock requirement 1\nMock requirement 2'
+  }
   
   if (!job) {
     notFound()
@@ -54,7 +58,7 @@ export default async function PublicJobDetailPage({ params }: { params: { id: st
                 )}
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  Posted {formatDate(job.created_at)}
+                  Posted {formatDate(job.created)}
                 </span>
               </div>
             </div>

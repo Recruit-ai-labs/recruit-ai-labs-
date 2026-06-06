@@ -1,0 +1,266 @@
+{
+  "jobs": [
+    {
+      "id": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "title": "SDE ",
+      "description": "SDE",
+      "requirements": "Graduate\n",
+      "location": "Raipur",
+      "salaryMin": 80000,
+      "salaryMax": 120000,
+      "status": "draft",
+      "seniority": "mid",
+      "skills": [
+        "nodejs",
+        "typescript"
+      ],
+      "embedding": null,
+      "adzunaId": null,
+      "jsearchId": null,
+      "postedAt": null,
+      "orgId": "default",
+      "createdAt": "2026-06-06T04:16:18.826Z"
+    }
+  ],
+  "candidates": [],
+  "applications": [
+    {
+      "id": "e0122f66-8348-42c3-86ef-46b6eafe4e6f",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "candidateId": "",
+      "stage": "new",
+      "aiMatchScore": null,
+      "source": "direct",
+      "appliedAt": "2026-06-06T04:46:34.705Z",
+      "lastActivityAt": "2026-06-06T04:46:34.706Z"
+    },
+    {
+      "id": "aaa0ef13-58e0-4c77-879c-0ee6c43b9317",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "candidateId": "",
+      "stage": "new",
+      "aiMatchScore": null,
+      "source": "direct",
+      "appliedAt": "2026-06-06T04:53:51.440Z",
+      "lastActivityAt": "2026-06-06T04:53:51.441Z"
+    },
+    {
+      "id": "d8143db8-0020-45af-a7e0-80932d30bbb9",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "candidateId": "",
+      "stage": "new",
+      "aiMatchScore": null,
+      "source": "direct",
+      "appliedAt": "2026-06-06T05:03:57.688Z",
+      "lastActivityAt": "2026-06-06T05:03:57.688Z"
+    },
+    {
+      "id": "f93f101b-32da-47a9-a594-88c003459154",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "candidateId": "",
+      "stage": "new",
+      "aiMatchScore": null,
+      "source": "direct",
+      "appliedAt": "2026-06-06T09:13:51.210Z",
+      "lastActivityAt": "2026-06-06T09:13:51.210Z"
+    }
+  ],
+  "interviews": [
+    {
+      "id": "1b99cf0d-4010-44be-9135-418be770c6f0",
+      "applicationId": "e0122f66-8348-42c3-86ef-46b6eafe4e6f",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "scheduledAt": "2026-06-07T08:30:00.000Z",
+      "calendarEventId": null,
+      "videoLink": null,
+      "interviewerId": "",
+      "feedback": null,
+      "rating": null,
+      "questions": [
+        {
+          "question": "Tell us about a recent technical challenge you solved.",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Explain the problem, your approach, the technologies used, and the outcome.",
+          "evaluationCriteria": [
+            "clarity",
+            "technical depth",
+            "impact"
+          ]
+        },
+        {
+          "question": "How do you ensure your code is maintainable and reliable?",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Discuss testing, best practices, reviews, and documentation.",
+          "evaluationCriteria": [
+            "quality",
+            "process",
+            "tooling"
+          ]
+        }
+      ],
+      "answers": [],
+      "techDna": null,
+      "status": "scheduled",
+      "cheatingWarnings": 0,
+      "confidenceScore": null,
+      "bodyLanguageScore": null,
+      "communicationScore": null,
+      "technicalScore": null,
+      "overallRecommendation": null,
+      "createdAt": "2026-06-06T04:46:34.707Z",
+      "interviewLink": "/interview/da94648b-21e7-4e4e-b2c8-1640acbebf79",
+      "publicToken": "da94648b-21e7-4e4e-b2c8-1640acbebf79",
+      "notes": "",
+      "interviewType": "technical"
+    },
+    {
+      "id": "76776c89-99f0-4bf9-9379-68ed0fc441e4",
+      "applicationId": "aaa0ef13-58e0-4c77-879c-0ee6c43b9317",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "scheduledAt": "2026-06-07T08:30:00.000Z",
+      "calendarEventId": null,
+      "videoLink": null,
+      "interviewerId": "",
+      "feedback": null,
+      "rating": null,
+      "questions": [
+        {
+          "question": "Tell us about a recent technical challenge you solved.",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Explain the problem, your approach, the technologies used, and the outcome.",
+          "evaluationCriteria": [
+            "clarity",
+            "technical depth",
+            "impact"
+          ]
+        },
+        {
+          "question": "How do you ensure your code is maintainable and reliable?",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Discuss testing, best practices, reviews, and documentation.",
+          "evaluationCriteria": [
+            "quality",
+            "process",
+            "tooling"
+          ]
+        }
+      ],
+      "answers": [],
+      "techDna": null,
+      "status": "scheduled",
+      "cheatingWarnings": 0,
+      "confidenceScore": null,
+      "bodyLanguageScore": null,
+      "communicationScore": null,
+      "technicalScore": null,
+      "overallRecommendation": null,
+      "createdAt": "2026-06-06T04:53:51.441Z",
+      "interviewLink": "/interview/506ea704-9747-48d0-b57f-1c88dec589b0",
+      "publicToken": "506ea704-9747-48d0-b57f-1c88dec589b0",
+      "notes": "",
+      "interviewType": "technical"
+    },
+    {
+      "id": "4438b15d-fd54-482a-af4a-d0fa956580db",
+      "applicationId": "d8143db8-0020-45af-a7e0-80932d30bbb9",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "scheduledAt": "2026-06-07T08:30:00.000Z",
+      "calendarEventId": null,
+      "videoLink": null,
+      "interviewerId": "",
+      "feedback": null,
+      "rating": null,
+      "questions": [
+        {
+          "question": "Tell us about a recent technical challenge you solved.",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Explain the problem, your approach, the technologies used, and the outcome.",
+          "evaluationCriteria": [
+            "clarity",
+            "technical depth",
+            "impact"
+          ]
+        },
+        {
+          "question": "How do you ensure your code is maintainable and reliable?",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Discuss testing, best practices, reviews, and documentation.",
+          "evaluationCriteria": [
+            "quality",
+            "process",
+            "tooling"
+          ]
+        }
+      ],
+      "answers": [],
+      "techDna": null,
+      "status": "scheduled",
+      "cheatingWarnings": 0,
+      "confidenceScore": null,
+      "bodyLanguageScore": null,
+      "communicationScore": null,
+      "technicalScore": null,
+      "overallRecommendation": null,
+      "createdAt": "2026-06-06T05:03:57.689Z",
+      "interviewLink": "/interview/be7bb092-d396-4b0d-8f39-0a42222dbed5",
+      "publicToken": "be7bb092-d396-4b0d-8f39-0a42222dbed5",
+      "notes": "",
+      "interviewType": "technical"
+    },
+    {
+      "id": "bbafba6b-db9d-46d9-ba43-e2c0c26b19b8",
+      "applicationId": "f93f101b-32da-47a9-a594-88c003459154",
+      "jobId": "39e08e16-9de5-4fc8-9581-9455d1382bf2",
+      "scheduledAt": "2026-06-07T08:30:00.000Z",
+      "calendarEventId": null,
+      "videoLink": null,
+      "interviewerId": "",
+      "feedback": null,
+      "rating": null,
+      "questions": [
+        {
+          "question": "Tell us about a recent technical challenge you solved.",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Explain the problem, your approach, the technologies used, and the outcome.",
+          "evaluationCriteria": [
+            "clarity",
+            "technical depth",
+            "impact"
+          ]
+        },
+        {
+          "question": "How do you ensure your code is maintainable and reliable?",
+          "type": "technical",
+          "difficulty": "medium",
+          "expectedAnswer": "Discuss testing, best practices, reviews, and documentation.",
+          "evaluationCriteria": [
+            "quality",
+            "process",
+            "tooling"
+          ]
+        }
+      ],
+      "answers": [],
+      "techDna": null,
+      "status": "scheduled",
+      "cheatingWarnings": 0,
+      "confidenceScore": null,
+      "bodyLanguageScore": null,
+      "communicationScore": null,
+      "technicalScore": null,
+      "overallRecommendation": null,
+      "createdAt": "2026-06-06T09:13:51.210Z",
+      "interviewLink": "/interview/7124f2cc-6765-4d85-9b83-a76e643f03d1",
+      "publicToken": "7124f2cc-6765-4d85-9b83-a76e643f03d1",
+      "notes": "",
+      "interviewType": "technical"
+    }
+  ]
+}

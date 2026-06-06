@@ -1,58 +1,48 @@
 import { NextResponse } from 'next/server'
-import { getAdminClient } from '@/lib/pocketbase-server'
+import { readDatabase, writeDatabase } from '@/lib/data-store'
 
-export async function GET(
-  request: Request,
-  { params }: { params: { token: string } }
-) {
-  try {
-    const pb = await getAdminClient()
+export async function GET(request: Request, { params }: { params: { token: string } }) {
+  const token = params.token
+  const db = await readDatabase()
+  const interview = db.interviews.find(item => item.publicToken === token)
 
-    // Find interview by public_token
-    const interviews = await pb.collection('interviews').getList(1, 1, {
-      filter: `public_token = "${params.token}"`,
-      expand: 'application_id.candidate_id,application_id.job_id',
-    })
+  if (!interview) {
+    return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
+  }
 
-    if (interviews.items.length === 0) {
-      return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
-    }
+  const application = interview.applicationId ? db.applications.find(app => app.id === interview.applicationId) : null
+  const candidate = application ? db.candidates.find(c => c.id === application.candidateId) : null
+  const job = application ? db.jobs.find(job => job.id === application.jobId) : db.jobs.find(job => job.id === interview.jobId)
 
-    const interview = interviews.items[0]
-    const application = interview.expand?.application_id
-    const candidate = application?.expand?.candidate_id
-    const job = application?.expand?.job_id
-
-    // Format response to match original structure
-    const formattedInterview = {
+  return NextResponse.json({
+    interview: {
       ...interview,
       applications: {
-        candidates: {
-          name: candidate?.name,
-          email: candidate?.email,
-          phone: candidate?.phone,
-          linkedin_url: candidate?.linkedin_url,
-          github_url: candidate?.github_url,
-          resume_url: candidate?.resume ? `${process.env.POCKETBASE_URL}/api/files/candidates/${candidate.id}/${candidate.resume}` : null,
-          parsed_skills: candidate?.parsed_skills || [],
-        },
-        jobs: {
-          title: job?.title,
-          location: job?.location,
-          description: job?.description,
-          requirements: job?.requirements,
-        }
-      }
-    }
-
-    return NextResponse.json({ interview: formattedInterview })
-  } catch (error: any) {
-    console.error('Public interview GET error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch interview' },
-      { status: 500 }
-    )
-  }
+        candidates: candidate,
+        jobs: job,
+      },
+    },
+  })
 }
 
-export const runtime = 'nodejs'
+export async function PATCH(request: Request, { params }: { params: { token: string } }) {
+  const token = params.token
+  const body = await request.json()
+  const db = await readDatabase()
+  const interviewIndex = db.interviews.findIndex(item => item.publicToken === token)
+
+  if (interviewIndex === -1) {
+    return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
+  }
+
+  const interview = db.interviews[interviewIndex]
+  const updated = {
+    ...interview,
+    ...body,
+  }
+
+  db.interviews[interviewIndex] = updated
+  await writeDatabase(db)
+
+  return NextResponse.json({ interview: updated })
+}

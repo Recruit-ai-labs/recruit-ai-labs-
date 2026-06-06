@@ -1,4 +1,3 @@
-import { createServerClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -6,13 +5,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { MapPin, DollarSign } from 'lucide-react'
 
 export default async function PublicJobBoard() {
-  const supabase = createServerClient()
-  
-  const { data: jobs } = await (supabase as any)
-    .from('jobs')
-    .select('*')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
+  let jobs: any[] = []
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -56,7 +49,7 @@ export default async function PublicJobBoard() {
                           {formatCurrency(job.salary_min)} - {formatCurrency(job.salary_max)}
                         </div>
                       )}
-                      <div>Posted {formatDate(job.created_at)}</div>
+                      <div>Posted {formatDate(job.created)}</div>
                     </div>
                     <p className="mt-4 text-sm line-clamp-2">{job.description}</p>
                   </CardContent>

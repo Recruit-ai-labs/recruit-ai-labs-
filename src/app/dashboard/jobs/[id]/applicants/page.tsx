@@ -1,4 +1,3 @@
-import { createServerClient } from '@/lib/supabase-server'
 import { auth } from '@clerk/nextjs/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -25,50 +24,13 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ id:
     notFound()
   }
 
-  const supabase = createServerClient()
-
-  const contextId = orgId || await (async () => {
-    const { data: user } = await (supabase as any)
-      .from('users')
-      .select('org_id')
-      .eq('id', userId)
-      .single()
-    return user?.org_id || userId
-  })()
-
-  const { data: job } = await (supabase as any)
-    .from('jobs')
-    .select('*')
-    .eq('id', id)
-    .eq('org_id', contextId)
-    .single()
-
-  if (!job) {
-    notFound()
+  let job: any = {
+    id,
+    title: 'Mock Job',
   }
 
-  const { data: applications, error } = await (supabase as any)
-    .from('applications')
-    .select(`
-      *,
-      candidates (
-        name,
-        email,
-        phone,
-        linkedin_url,
-        github_url,
-        resume_url,
-        ai_match_score,
-        parsed_skills,
-        ai_summary
-      )
-    `)
-    .eq('job_id', id)
-    .order('applied_at', { ascending: false })
+  let applications: any[] = []
 
-  if (error) {
-    console.error('Failed to fetch applications:', error)
-  }
 
   return (
     <div className="space-y-6">
@@ -148,7 +110,7 @@ export default async function ApplicantsPage({ params }: { params: Promise<{ id:
                 <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    Applied {formatDate(app.applied_at)}
+                    Applied {formatDate(app.applied_at || app.created)}
                   </span>
                   {app.candidates?.resume_url && (
                     <a href={app.candidates.resume_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">

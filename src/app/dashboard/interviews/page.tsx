@@ -1,87 +1,281 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Calendar as CalendarIcon, Plus, Video, Play, FileText, AlertTriangle } from "lucide-react"
-import { formatDate } from "@/lib/utils"
-import { ScheduleInterviewModal } from "@/components/interviews/schedule-interview-modal"
-import { toast } from "sonner"
-import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Calendar, Clock, User, Briefcase, Video, ExternalLink, Loader2, Plus, X, Copy } from 'lucide-react'
+import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface Interview {
   id: string
+  application_id: string
   scheduled_at: string
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled' | 'redlisted'
-  cheating_warnings: number
-  technical_score: number | null
-  communication_score: number | null
-  confidence_score: number | null
-  body_language_score: number | null
-  overall_recommendation: string | null
-  tech_dna: any
+  interviewer_id: string
+  status: string
+  questions: string | any[]
+  interview_link: string
+  video_link: string
+  created: string
   applications: {
-    candidates: {
-      name: string
-      email: string
-    }
-    jobs: {
-      title: string
-      location: string
-    }
+    id: string
+    stage: string
+    jobs: { id: string; title: string; location: string } | null
+    candidates: { id: string; name: string; email: string; phone: string } | null
+  } | null
+}
+
+interface Job {
+  id: string
+  title: string
+  location: string
+  status: string
+}
+
+interface Application {
+  id: string
+  stage: string
+  candidates: {
+    id: string
+    name: string
+    email: string
   }
 }
 
-export default function InterviewsPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [upcomingInterviews, setUpcomingInterviews] = useState<Interview[]>([])
-  const [pastInterviews, setPastInterviews] = useState<Interview[]>([])
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+const statusColors: Record<string, string> = {
+  scheduled: 'bg-blue-100 text-blue-800',
+  in_progress: 'bg-yellow-100 text-yellow-800',
+  completed: 'bg-green-100 text-green-800',
+  cancelled: 'bg-gray-100 text-gray-800',
+  redlisted: 'bg-red-100 text-red-800',
+}
 
-  const fetchInterviews = async () => {
-    try {
-      const response = await fetch('/api/interviews')
-      if (!response.ok) throw new Error('Failed to fetch interviews')
-      
-      const data = await response.json()
-      setUpcomingInterviews(data.upcoming || [])
-      setPastInterviews(data.past || [])
-    } catch (error) {
-      console.error('Error fetching interviews:', error)
-      toast.error('Failed to load interviews')
-    } finally {
-      setLoading(false)
-    }
-  }
+export default function InterviewsPage() {
+  const [upcoming, setUpcoming] = useState<Interview[]>([])
+  const [past, setPast] = useState<Interview[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Create Interview Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [applications, setApplications] = useState<Application[]>([])
+  const [fetchingModal, setFetchingModal] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createdLink, setCreatedLink] = useState<string | null>(null)
+  const [createForm, setCreateForm] = useState({
+    jobId: '',
+    applicationId: '',
+    scheduledAt: '',
+    interviewType: 'mixed' as 'technical' | 'behavioral' | 'mixed',
+    notes: '',
+  })
 
   useEffect(() => {
     fetchInterviews()
   }, [])
 
-  const getStatusBadge = (status: Interview['status']) => {
-    const variants: Record<Interview['status'], 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      scheduled: 'default',
-      in_progress: 'secondary',
-      completed: 'destructive',
-      cancelled: 'outline',
-      redlisted: 'destructive',
+  // Fetch jobs when modal opens
+  useEffect(() => {
+    if (showCreateModal) {
+      fetchJobs()
     }
+  }, [showCreateModal])
 
-    const icons = {
-      scheduled: <CalendarIcon className="w-3 h-3" />,
-      in_progress: <Play className="w-3 h-3" />,
-      completed: <FileText className="w-3 h-3" />,
-      cancelled: <AlertTriangle className="w-3 h-3" />,
-      redlisted: <AlertTriangle className="w-3 h-3" />,
+  // Fetch applications when job is selected
+  useEffect(() => {
+    if (createForm.jobId) {
+      fetchApplicationsForJob(createForm.jobId)
     }
+  }, [createForm.jobId])
 
+  const fetchInterviews = async () => {
+    try {
+      const response = await fetch('/api/interviews')
+      if (response.ok) {
+        const data = await response.json()
+        setUpcoming(data.upcoming || [])
+        setPast(data.past || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch interviews:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchJobs = async () => {
+    setFetchingModal(true)
+    try {
+      const response = await fetch('/api/jobs')
+      if (response.ok) {
+        const data = await response.json()
+        setJobs(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch jobs:', error)
+    } finally {
+      setFetchingModal(false)
+    }
+  }
+
+  const fetchApplicationsForJob = async (jobId: string) => {
+    setFetchingModal(true)
+    try {
+      const response = await fetch(`/api/applications?jobId=${jobId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setApplications(data.applications || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch applications:', error)
+    } finally {
+      setFetchingModal(false)
+    }
+  }
+
+  const handleCreateInterview = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!createForm.applicationId || !createForm.scheduledAt) {
+      toast.error('Please select a candidate and date')
+      return
+    }
+    setCreating(true)
+    try {
+      const response = await fetch('/api/interviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: createForm.applicationId,
+          scheduledAt: createForm.scheduledAt,
+          interviewerId: '',
+          interviewType: createForm.interviewType,
+          generateQuestions: true,
+          notes: createForm.notes,
+        }),
+      })
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create interview')
+      }
+      const data = await response.json()
+      setCreatedLink(data.interviewLink)
+      toast.success('Interview created successfully!')
+      fetchInterviews()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create interview')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const resetCreateModal = () => {
+    setShowCreateModal(false)
+    setCreatedLink(null)
+    setCreateForm({ jobId: '', applicationId: '', scheduledAt: '', interviewType: 'mixed', notes: '' })
+    setApplications([])
+  }
+
+  const formatDateTime = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
+  const getQuestionCount = (questions: string | any[]) => {
+    if (typeof questions === 'string') {
+      try {
+        return JSON.parse(questions).length
+      } catch {
+        return 0
+      }
+    }
+    return questions?.length || 0
+  }
+
+  const renderInterviewCard = (interview: Interview) => (
+    <Card key={interview.id} className="hover:shadow-md transition-shadow">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-lg">
+              {interview.applications?.candidates?.name || 'Unknown Candidate'}
+            </CardTitle>
+            <CardDescription className="flex items-center gap-2">
+              <Briefcase className="w-3.5 h-3.5" />
+              {interview.applications?.jobs?.title || 'Unknown Position'}
+            </CardDescription>
+          </div>
+          <Badge className={statusColors[interview.status] || 'bg-gray-100 text-gray-800'}>
+            {interview.status}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="w-4 h-4" />
+          {formatDateTime(interview.scheduled_at)}
+        </div>
+
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+          {interview.applications?.candidates?.email && (
+            <span className="flex items-center gap-1">
+              <User className="w-3 h-3" />
+              {interview.applications.candidates.email}
+            </span>
+          )}
+          <span className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {getQuestionCount(interview.questions)} questions
+          </span>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <Link href={`/interviews/${interview.id}`}>
+            <Button variant="outline" size="sm" className="gap-1">
+              <Video className="w-3.5 h-3.5" />
+              View Session
+            </Button>
+          </Link>
+          {interview.interview_link && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1"
+              onClick={() => window.open(interview.interview_link, '_blank')}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              Copy Link
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  if (loading) {
     return (
-      <Badge variant={variants[status]} className="gap-1">
-        {icons[status]}
-        {status.replace('_', ' ').toUpperCase()}
-      </Badge>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <p className="ml-2 text-muted-foreground">Loading interviews...</p>
+      </div>
     )
   }
 
@@ -90,139 +284,249 @@ export default function InterviewsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Interviews</h1>
-          <p className="text-muted-foreground mt-1">Schedule and manage candidate interviews</p>
+          <p className="text-muted-foreground mt-1">
+            Manage and monitor candidate interviews
+          </p>
         </div>
-        <Button className="gap-2" onClick={() => setIsModalOpen(true)}>
+        <Button onClick={() => setShowCreateModal(true)} className="gap-2">
           <Plus className="w-4 h-4" />
-          Schedule Interview
+          Create Interview
         </Button>
       </div>
 
-      {/* Upcoming Interviews */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Upcoming Interviews</CardTitle>
-          <CardDescription>Scheduled interviews for the next 7 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Loading interviews...</p>
+      {/* Create Interview Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-background border-b px-6 py-4 flex items-center justify-between rounded-t-lg">
+              <h2 className="text-2xl font-bold">Create Interview</h2>
+              <Button variant="ghost" size="icon" onClick={resetCreateModal}>
+                <X className="w-5 h-5" />
+              </Button>
             </div>
-          ) : upcomingInterviews.length > 0 ? (
-            <div className="space-y-4">
-              {upcomingInterviews.map((interview) => (
-                <div key={interview.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <CalendarIcon className="w-8 h-8 text-primary" />
-                    <div>
-                      <h3 className="font-semibold">{interview.applications?.candidates?.name || 'Unknown'}</h3>
-                      <p className="text-sm text-muted-foreground">{interview.applications?.jobs?.title || 'Unknown Position'}</p>
-                      <div className="flex gap-4 mt-1 text-sm">
-                        <span>{formatDate(interview.scheduled_at)}</span>
-                        {interview.status === 'scheduled' && (
-                          <span className="flex items-center gap-1">
-                            <Video className="w-3 h-3" /> Video Call
-                          </span>
+
+            {!createdLink ? (
+              <form onSubmit={handleCreateInterview} className="p-6 space-y-6">
+                {/* Job Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="jobId">Job Position *</Label>
+                  {fetchingModal && !jobs.length ? (
+                    <div className="text-sm text-muted-foreground">Loading jobs...</div>
+                  ) : (
+                    <Select
+                      value={createForm.jobId || undefined}
+                      onValueChange={(value: string | null) => setCreateForm({ ...createForm, jobId: value || '', applicationId: '' })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a job position" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {jobs.length > 0 ? (
+                          jobs.map((job) => (
+                            <SelectItem key={job.id} value={job.id}>
+                              {job.title} ({job.location})
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                            No jobs found. Create a job first.
+                          </div>
                         )}
-                      </div>
-                    </div>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Candidate Selection */}
+                <div className="space-y-2">
+                  <Label htmlFor="applicationId">Candidate *</Label>
+                  {!createForm.jobId ? (
+                    <div className="text-sm text-muted-foreground">Select a job first</div>
+                  ) : fetchingModal ? (
+                    <div className="text-sm text-muted-foreground">Loading applicants...</div>
+                  ) : (
+                    <Select
+                      value={createForm.applicationId || undefined}
+                      onValueChange={(value: string | null) => setCreateForm({ ...createForm, applicationId: value || '' })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a candidate" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {applications.length > 0 ? (
+                          applications.map((app) => (
+                            <SelectItem key={app.id} value={app.id}>
+                              {app.candidates?.name} ({app.candidates?.email})
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                            No applicants for this job
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+
+                {/* Date and Time */}
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledAt">Interview Date & Time *</Label>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="scheduledAt"
+                      type="datetime-local"
+                      value={createForm.scheduledAt}
+                      onChange={(e) => setCreateForm({ ...createForm, scheduledAt: e.target.value })}
+                      required
+                    />
                   </div>
-                  <div className="flex gap-2">
-                    {interview.status === 'scheduled' && (
-                      <Button 
-                        variant="default"
-                        onClick={() => router.push(`/interviews/${interview.id}`)}
-                      >
-                        Start Interview
-                      </Button>
+                </div>
+
+                {/* Interview Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="interviewType">Interview Type</Label>
+                  <Select
+                    value={createForm.interviewType}
+                    onValueChange={(value: any) => setCreateForm({ ...createForm, interviewType: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="behavioral">Behavioral</SelectItem>
+                      <SelectItem value="mixed">Mixed (Recommended)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Notes */}
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes (Optional)</Label>
+                  <Textarea
+                    id="notes"
+                    value={createForm.notes}
+                    onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+                    placeholder="Any special instructions..."
+                    rows={2}
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-4 border-t justify-end">
+                  <Button type="button" variant="outline" size="sm" onClick={resetCreateModal}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" disabled={creating || !createForm.applicationId || !createForm.scheduledAt}>
+                    {creating ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</>
+                    ) : (
+                      'Create Interview'
                     )}
-                    <Button variant="outline">View Details</Button>
-                  </div>
+                  </Button>
                 </div>
-              ))}
+              </form>
+            ) : (
+              <div className="p-6 space-y-6">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg space-y-3">
+                  <div className="flex items-center gap-2 text-green-800 font-semibold">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Interview Link Generated!
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={createdLink}
+                      readOnly
+                      className="flex-1 px-3 py-2 bg-white border border-green-300 rounded text-sm font-mono"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdLink)
+                        toast.success('Link copied!')
+                      }}
+                      className="gap-2"
+                    >
+                      <Copy className="w-4 h-4" />
+                      Copy
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(createdLink, '_blank')}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Open
+                    </Button>
+                  </div>
+                  <p className="text-xs text-green-700">
+                    Share this link with the candidate. They can access the interview directly.
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={resetCreateModal} size="sm">Close</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <Tabs defaultValue="upcoming">
+        <TabsList>
+          <TabsTrigger value="upcoming">
+            Upcoming ({upcoming.length})
+          </TabsTrigger>
+          <TabsTrigger value="past">
+            Past ({past.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="upcoming" className="mt-4">
+          {upcoming.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {upcoming.map(renderInterviewCard)}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <CalendarIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
-              <p>No upcoming interviews scheduled</p>
-            </div>
+            <Card>
+              <CardContent className="py-20 text-center">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-20 text-muted-foreground" />
+                <p className="text-muted-foreground mb-2">No upcoming interviews</p>
+                <p className="text-sm text-muted-foreground">
+                  Schedule interviews from the job applicants page
+                </p>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      {/* Past Interviews */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Past Interviews</CardTitle>
-          <CardDescription>Interview history and feedback</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Loading interviews...</p>
-            </div>
-          ) : pastInterviews.length > 0 ? (
-            <div className="space-y-4">
-              {pastInterviews.map((interview) => (
-                <div key={interview.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <CalendarIcon className="w-8 h-8 text-muted-foreground" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{interview.applications?.candidates?.name || 'Unknown'}</h3>
-                        {getStatusBadge(interview.status)}
-                        {interview.cheating_warnings > 0 && (
-                          <Badge variant="destructive" className="gap-1">
-                            <AlertTriangle className="w-3 h-3" />
-                            {interview.cheating_warnings} warning{interview.cheating_warnings > 1 ? 's' : ''}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{interview.applications?.jobs?.title || 'Unknown Position'}</p>
-                      <div className="flex gap-4 mt-1 text-sm">
-                        <span>{formatDate(interview.scheduled_at)}</span>
-                        {interview.tech_dna && (
-                          <span className="text-green-600 font-medium">Tech DNA Generated</span>
-                        )}
-                      </div>
-                      {interview.technical_score && (
-                        <div className="flex gap-3 mt-2 text-xs">
-                          <span>Technical: {interview.technical_score}/100</span>
-                          <span>Communication: {interview.communication_score}/100</span>
-                          <span>Confidence: {interview.confidence_score}/100</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {interview.tech_dna ? (
-                      <Button variant="default" className="gap-2">
-                        <FileText className="w-4 h-4" />
-                        View Tech DNA
-                      </Button>
-                    ) : interview.status === 'completed' ? (
-                      <Button variant="secondary">Generate Tech DNA</Button>
-                    ) : null}
-                    <Button variant="outline">View Details</Button>
-                  </div>
-                </div>
-              ))}
+        <TabsContent value="past" className="mt-4">
+          {past.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {past.map(renderInterviewCard)}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No past interviews</p>
-            </div>
+            <Card>
+              <CardContent className="py-20 text-center">
+                <Calendar className="h-12 w-12 mx-auto mb-4 opacity-20 text-muted-foreground" />
+                <p className="text-muted-foreground mb-2">No past interviews</p>
+                <p className="text-sm text-muted-foreground">
+                  Completed interviews will appear here
+                </p>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Schedule Interview Modal */}
-      <ScheduleInterviewModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchInterviews}
-      />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

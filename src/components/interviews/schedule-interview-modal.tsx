@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,77 +15,22 @@ import {
 import { Calendar, X, Loader2, Copy, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface Application {
-  id: string
-  stage: string
-  jobs: {
-    id: string
-    title: string
-  }
-  candidates: {
-    id: string
-    name: string
-    email: string
-  }
-}
-
-interface User {
-  id: string
-  email: string
-  role: string
-}
-
 interface ScheduleInterviewModalProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
+  jobId: string
 }
 
-export function ScheduleInterviewModal({ isOpen, onClose, onSuccess }: ScheduleInterviewModalProps) {
+export function ScheduleInterviewModal({ isOpen, onClose, onSuccess, jobId }: ScheduleInterviewModalProps) {
   const [loading, setLoading] = useState(false)
-  const [fetchingData, setFetchingData] = useState(false)
-  const [applications, setApplications] = useState<Application[]>([])
-  const [users, setUsers] = useState<User[]>([])
   const [formData, setFormData] = useState({
-    applicationId: '',
     scheduledAt: '',
-    interviewerId: '',
     interviewType: 'mixed' as 'technical' | 'behavioral' | 'mixed',
     generateQuestions: true,
     notes: '',
   })
   const [generatedLink, setGeneratedLink] = useState<string | null>(null)
-
-  // Fetch applications and users when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchData()
-    }
-  }, [isOpen])
-
-  const fetchData = async () => {
-    setFetchingData(true)
-    try {
-      // Fetch applications for candidate selection
-      const appsResponse = await fetch('/api/applications?status=new,screening')
-      if (appsResponse.ok) {
-        const appsData = await appsResponse.json()
-        setApplications(appsData.applications || [])
-      }
-
-      // Fetch users for interviewer selection
-      const usersResponse = await fetch('/api/users')
-      if (usersResponse.ok) {
-        const usersData = await usersResponse.json()
-        setUsers(usersData.users || [])
-      }
-    } catch (error) {
-      console.error('Error fetching dropdown data:', error)
-      toast.error('Failed to load candidate and interviewer data')
-    } finally {
-      setFetchingData(false)
-    }
-  }
 
   if (!isOpen) return null
 
@@ -99,7 +44,14 @@ export function ScheduleInterviewModal({ isOpen, onClose, onSuccess }: ScheduleI
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          jobId,
+          scheduledAt: formData.scheduledAt,
+          interviewerId: '',
+          interviewType: formData.interviewType,
+          generateQuestions: formData.generateQuestions,
+          notes: formData.notes,
+        }),
       })
 
       if (!response.ok) {
@@ -111,28 +63,18 @@ export function ScheduleInterviewModal({ isOpen, onClose, onSuccess }: ScheduleI
       
       toast.success('Interview scheduled successfully!')
       
-      // Show generated link
       if (data.interviewLink) {
         setGeneratedLink(data.interviewLink)
       }
       
       onSuccess()
-      // Don't close modal - let user see and copy the link
-      // onClose()
       
-      // Reset form
       setFormData({
-        applicationId: '',
         scheduledAt: '',
-        interviewerId: '',
         interviewType: 'mixed',
         generateQuestions: true,
         notes: '',
       })
-      setGeneratedLink(null)
-      
-      // Refresh data
-      fetchData()
     } catch (error: any) {
       toast.error(error.message || 'Failed to schedule interview')
     } finally {
@@ -151,34 +93,11 @@ export function ScheduleInterviewModal({ isOpen, onClose, onSuccess }: ScheduleI
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Application Selection */}
           <div className="space-y-2">
-            <Label htmlFor="applicationId">Candidate Application *</Label>
-            {fetchingData ? (
-              <div className="text-sm text-muted-foreground">Loading applications...</div>
-            ) : (
-              <Select
-                value={formData.applicationId || undefined}
-                onValueChange={(value: string | null) => setFormData({ ...formData, applicationId: value || '' })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select candidate application" />
-                </SelectTrigger>
-                <SelectContent>
-                  {applications.length > 0 ? (
-                    applications.map((app) => (
-                      <SelectItem key={app.id} value={app.id}>
-                        {app.candidates?.name} - {app.jobs?.title}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                      No applications available
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            )}
+            <Label>Interview Type</Label>
+            <div className="text-sm text-muted-foreground">
+              This interview will be created for the selected job description and a public candidate link will be generated.
+            </div>
           </div>
 
           {/* Date and Time */}
@@ -194,36 +113,6 @@ export function ScheduleInterviewModal({ isOpen, onClose, onSuccess }: ScheduleI
                 required
               />
             </div>
-          </div>
-
-          {/* Interviewer */}
-          <div className="space-y-2">
-            <Label htmlFor="interviewerId">Interviewer *</Label>
-            {fetchingData ? (
-              <div className="text-sm text-muted-foreground">Loading users...</div>
-            ) : (
-              <Select
-                value={formData.interviewerId || undefined}
-                onValueChange={(value: string | null) => setFormData({ ...formData, interviewerId: value || '' })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select interviewer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.length > 0 ? (
-                    users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.email} ({user.role})
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                      No users available
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-            )}
           </div>
 
           {/* Interview Type */}
@@ -317,12 +206,12 @@ export function ScheduleInterviewModal({ isOpen, onClose, onSuccess }: ScheduleI
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+          <div className="flex gap-2 pt-4 border-t justify-end">
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>
               {generatedLink ? 'Close' : 'Cancel'}
             </Button>
             {!generatedLink && (
-              <Button type="submit" disabled={loading} className="flex-1">
+              <Button type="submit" size="sm" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

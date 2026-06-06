@@ -512,6 +512,232 @@ html {
 .stagger-children.animate-in > *:nth-child(6) { transition-delay: 0.6s; opacity: 1; transform: translateY(0); }
 
 /* ============================================
+   LOGIN PAGE VISUAL PANEL
+   ============================================ */
+
+.login-visual-panel {
+  position: relative;
+  background: linear-gradient(135deg, #09090b 0%, #18181b 50%, #27272a 100%);
+  overflow: hidden;
+}
+
+.visual-panel-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.08) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255,255,255,0.08) 2px, transparent 2px);
+  background-size: 80px 80px;
+  opacity: 0.8;
+}
+
+.visual-panel-orb {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(60px);
+  animation: orbFloat 8s ease-in-out infinite;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.15); }
+}
+
+@keyframes logoPulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+.logo-pulse {
+  animation: logoPulse 3s ease-in-out infinite;
+}
+
+/* ============================================
+   HANDWRITING / LOADING ANIMATION
+   ============================================ */
+
+@keyframes handwritingDraw {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes fillIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.handwriting-draw {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: handwritingDraw 2.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+.handwriting-fill {
+  opacity: 0;
+  animation: fillIn 0.6s ease forwards;
+  animation-delay: 2.2s;
+}
+
+@keyframes dotBlink {
+  0%, 20% { opacity: 0; }
+  40%, 100% { opacity: 1; }
+}
+
+.loading-dot {
+  opacity: 0;
+}
+.loading-dot:nth-child(1) { animation: dotBlink 1.4s 0s infinite; }
+.loading-dot:nth-child(2) { animation: dotBlink 1.4s 0.2s infinite; }
+.loading-dot:nth-child(3) { animation: dotBlink 1.4s 0.4s infinite; }
+
+@keyframes penMove {
+  0% { transform: translateX(0) rotate(-5deg); }
+  50% { transform: translateX(10px) rotate(5deg); }
+  100% { transform: translateX(0) rotate(-5deg); }
+}
+
+.pen-wiggle {
+  animation: penMove 0.8s ease-in-out infinite;
+  display: inline-block;
+}
+
+/* ============================================
+   WOW LANDING PAGE ANIMATIONS
+   ============================================ */
+
+/* Morphing blob */
+@keyframes morphBlob {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  50% { border-radius: 50% 60% 30% 60% / 30% 40% 70% 60%; }
+  75% { border-radius: 60% 30% 60% 40% / 70% 50% 40% 60%; }
+}
+.morph-blob {
+  animation: morphBlob 8s ease-in-out infinite;
+}
+
+/* Glow pulse */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+  50% { box-shadow: 0 0 40px rgba(0,0,0,0.2), 0 0 80px rgba(0,0,0,0.05); }
+}
+.glow-pulse {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+/* Rotating gradient border */
+@keyframes rotateGradient {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.rotating-gradient-border {
+  position: relative;
+  overflow: hidden;
+}
+.rotating-gradient-border::before {
+  content: '';
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  background: conic-gradient(from 0deg, transparent, rgba(0,0,0,0.1), transparent, rgba(0,0,0,0.05), transparent);
+  animation: rotateGradient 6s linear infinite;
+  z-index: -1;
+}
+
+/* Stagger line draw */
+@keyframes lineDraw {
+  from { width: 0; }
+  to { width: 100%; }
+}
+.line-draw {
+  overflow: hidden;
+}
+.line-draw::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, #000, #333, #000);
+  animation: lineDraw 1.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* Particle float */
+@keyframes particleFloat1 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
+  25% { transform: translate(30px, -50px) rotate(90deg); opacity: 0.8; }
+  50% { transform: translate(-20px, -100px) rotate(180deg); opacity: 0.3; }
+  75% { transform: translate(50px, -50px) rotate(270deg); opacity: 0.6; }
+}
+@keyframes particleFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+  33% { transform: translate(-40px, -80px) scale(1.5); opacity: 0.7; }
+  66% { transform: translate(30px, -40px) scale(0.8); opacity: 0.4; }
+}
+@keyframes particleFloat3 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(60px, -30px) rotate(120deg); }
+  66% { transform: translate(-30px, -60px) rotate(240deg); }
+}
+
+.particle-1 { animation: particleFloat1 12s ease-in-out infinite; }
+.particle-2 { animation: particleFloat2 10s ease-in-out infinite; }
+.particle-3 { animation: particleFloat3 8s ease-in-out infinite; }
+
+/* Counter number roll */
+@keyframes numberRoll {
+  0% { transform: translateY(100%); opacity: 0; }
+  30% { transform: translateY(0); opacity: 1; }
+  70% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+.number-roll {
+  display: inline-block;
+  overflow: hidden;
+}
+
+/* Breathing card */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+/* Wave line */
+@keyframes waveLine {
+  0% { d: path('M0,50 C150,50 350,50 500,50'); }
+  50% { d: path('M0,50 C150,20 350,80 500,50'); }
+  100% { d: path('M0,50 C150,50 350,50 500,50'); }
+}
+
+/* Spotlight sweep */
+@keyframes spotlightSweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.spotlight-sweep {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%);
+  background-size: 50% 100%;
+  animation: spotlightSweep 3s ease-in-out infinite;
+}
+
+/* Magnetic underline */
+@keyframes magneticUnderline {
+  0% { transform: scaleX(0); transform-origin: left; }
+  50% { transform: scaleX(1); transform-origin: left; }
+  51% { transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 

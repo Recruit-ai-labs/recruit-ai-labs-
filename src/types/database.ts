@@ -207,14 +207,18 @@ export const applicationSchema = z.object({
 })
 
 export const interviewSchema = z.object({
-  applicationId: z.string(),
+  applicationId: z.string().optional(),
+  jobId: z.string().optional(),
   scheduledAt: z.string(),
-  interviewerId: z.string(),
+  interviewerId: z.string().optional().default(''),
   interviewType: z.enum(['technical', 'behavioral', 'mixed']).default('mixed'),
   generateQuestions: z.boolean().default(true),
   notes: z.string().optional(),
   feedback: z.string().optional(),
   rating: z.number().min(1).max(5).optional(),
+}).refine((data) => data.applicationId || data.jobId, {
+  message: 'Either applicationId or jobId is required',
+  path: ['applicationId', 'jobId'],
 })
 
 export type CandidateInput = z.infer<typeof candidateSchema>

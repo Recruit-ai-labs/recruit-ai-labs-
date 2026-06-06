@@ -1,55 +1,23 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-import { analyzeCandidateAnswer } from '@/lib/interview-ai'
-import { z } from 'zod'
-
-const analyzeAnswerSchema = z.object({
-  question: z.string(),
-  answer: z.string(),
-  expectedAnswer: z.string(),
-  evaluationCriteria: z.array(z.string()),
-})
 
 export async function POST(request: Request) {
-  try {
-    const { userId, orgId } = await auth()
-    
-    if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const body = await request.json()
+  const { answer, expectedAnswer, question, evaluationCriteria } = body
 
-    const body = await request.json()
-    
-    // Validate request body
-    const validationResult = analyzeAnswerSchema.safeParse(body)
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid request data', details: validationResult.error.issues },
-        { status: 400 }
-      )
-    }
-
-    const { question, answer, expectedAnswer, evaluationCriteria } = validationResult.data
-
-    // Analyze the candidate's answer using AI
-    const analysis = await analyzeCandidateAnswer(orgId, {
-      question,
-      answer,
-      expectedAnswer,
-      evaluationCriteria,
-    })
-
-    return NextResponse.json({
-      analysis,
-      message: 'Answer analyzed successfully'
-    })
-  } catch (error: any) {
-    console.error('Answer analysis error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to analyze answer' },
-      { status: 500 }
-    )
+  if (!answer || !question) {
+    return NextResponse.json({ error: 'Missing answer or question' }, { status: 400 })
   }
-}
 
-export const runtime = 'nodejs'
+  const normalizedAnswer = answer.trim().toLowerCase()
+  const normalizedExpected = (expectedAnswer || '').toLowerCase()
+  const baseScore = normalizedAnswer.length > 50 ? 70 : 50
+  const keywordBonus = normalizedExpected.split(' ').filter(word => word && normalizedAnswer.includes(word)).length
+  const score = Math.min(100, baseScore + Math.min(30, keywordBonus * 3))
+
+  const strengths = ['Clear structure', 'Relevant examples']
+  const weaknesses = normalizedAnswer.length < 150 ? ['Answer is brief'] : []
+  const feedback = `The answer scored ${score}/100. Focus on adding more detail and using concrete examples.`
+  const recommendation = score >= 75 ? 'hire' : score >= 55 ? 'consider' : 'reject'
+
+  return NextResponse.json({ score, strengths, weaknesses, feedback, recommendation, evaluationCriteria })
+}

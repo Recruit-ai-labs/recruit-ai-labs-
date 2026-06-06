@@ -23,6 +23,7 @@ export default function CandidateDetailPage() {
   const [interviews, setInterviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedInterview, setSelectedInterview] = useState<any>(null)
+  const [expandedSummary, setExpandedSummary] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCandidateData()
@@ -50,13 +51,13 @@ export default function CandidateDetailPage() {
     content += `==================\n\n`
     content += `Candidate: ${interview.applications?.candidates?.name}\n`
     content += `Position: ${interview.applications?.jobs?.title}\n`
-    content += `Date: ${new Date(interview.created_at).toLocaleString()}\n`
-    content += `Overall Score: ${interview.technical_score || 'N/A'}/100\n`
-    content += `Recommendation: ${interview.overall_recommendation || 'N/A'}\n`
-    content += `Cheating Warnings: ${interview.cheating_warnings || 0}\n\n`
+    content += `Date: ${new Date(interview.createdAt || interview.created_at).toLocaleString()}\n`
+    content += `Overall Score: ${interview.technicalScore ?? interview.technical_score || 'N/A'}/100\n`
+    content += `Recommendation: ${interview.overallRecommendation || interview.overall_recommendation || 'N/A'}\n`
+    content += `Cheating Warnings: ${interview.cheatingWarnings ?? interview.cheating_warnings || 0}\n\n`
     
-    if (interview.professional_summary) {
-      content += `PROFESSIONAL SUMMARY:\n${interview.professional_summary}\n\n`
+    if (interview.professional_summary || interview.aiSummary || interview.ai_summary) {
+      content += `PROFESSIONAL SUMMARY:\n${interview.professional_summary || interview.aiSummary || interview.ai_summary}\n\n`
     }
     
     content += `==================\n`
@@ -93,25 +94,6 @@ export default function CandidateDetailPage() {
     URL.revokeObjectURL(url)
     
     toast.success('Interview transcript exported!')
-  }
-
-  const generateAnalysis = async (interviewId: string) => {
-    try {
-      toast.info('Generating comprehensive analysis...')
-      const response = await fetch('/api/interviews/generate-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interviewId }),
-      })
-      
-      if (!response.ok) throw new Error('Failed to generate analysis')
-      
-      const data = await response.json()
-      toast.success('Analysis generated successfully!')
-      fetchCandidateData() // Refresh data
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to generate analysis')
-    }
   }
 
   const getRecommendationIcon = (recommendation: string) => {
@@ -168,40 +150,41 @@ export default function CandidateDetailPage() {
                 <span>{candidate.phone}</span>
               </div>
             )}
-            {candidate.linkedin_url && (
+            {(candidate.linkedinUrl || candidate.linkedin_url) && (
               <div className="flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-muted-foreground" />
-                <a href={candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <a href={candidate.linkedinUrl || candidate.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                   LinkedIn Profile
                 </a>
               </div>
             )}
-            {candidate.github_url && (
+            {(candidate.githubUrl || candidate.github_url) && (
               <div className="flex items-center gap-2">
                 <LinkIcon className="w-4 h-4 text-muted-foreground" />
-                <a href={candidate.github_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <a href={candidate.githubUrl || candidate.github_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                   GitHub Profile
                 </a>
               </div>
             )}
           </div>
 
-          {candidate.parsed_skills && candidate.parsed_skills.length > 0 && (
+          {(candidate.parsedSkills || candidate.parsed_skills)?.length > 0 && (
             <div className="mt-4">
               <h4 className="font-semibold mb-2">Skills</h4>
               <div className="flex flex-wrap gap-2">
-                {candidate.parsed_skills.map((skill: string, i: number) => (
+                {(candidate.parsedSkills || candidate.parsed_skills).map((skill: string, i: number) => (
                   <Badge key={i} variant="secondary">{skill}</Badge>
                 ))}
               </div>
             </div>
           )}
 
-          {candidate.resume_url && (
-            <div className="mt-4">
-              <Button variant="outline" onClick={() => window.open(candidate.resume_url, '_blank')}>
+          {(candidate.resumeUrl || candidate.resume_url) && (
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="font-semibold mb-2">Resume</h4>
+              <Button variant="outline" onClick={() => window.open(candidate.resumeUrl || candidate.resume_url, '_blank')}>
                 <FileText className="w-4 h-4 mr-2" />
-                View Resume
+                Download Resume
               </Button>
             </div>
           )}
@@ -235,44 +218,76 @@ export default function CandidateDetailPage() {
                       <Badge variant={interview.status === 'completed' ? 'default' : 'outline'}>
                         {interview.status}
                       </Badge>
-                      {interview.cheating_warnings > 0 && (
+                      {(interview.cheatingWarnings ?? interview.cheating_warnings) > 0 && (
                         <Badge variant="destructive" className="gap-1">
                           <AlertTriangle className="w-3 h-3" />
-                          {interview.cheating_warnings} warnings
+                          {interview.cheatingWarnings ?? interview.cheating_warnings} warnings
                         </Badge>
                       )}
-                      {interview.overall_recommendation && (
+                      {(interview.overallRecommendation || interview.overall_recommendation) && (
                         <Badge variant={
-                          interview.overall_recommendation === 'hire' ? 'default' :
-                          interview.overall_recommendation === 'reject' ? 'destructive' :
+                          (interview.overallRecommendation || interview.overall_recommendation) === 'hire' ? 'default' :
+                          (interview.overallRecommendation || interview.overall_recommendation) === 'reject' ? 'destructive' :
                           'secondary'
                         } className="gap-1">
-                          {getRecommendationIcon(interview.overall_recommendation)}
-                          {interview.overall_recommendation.toUpperCase()}
+                          {getRecommendationIcon(interview.overallRecommendation || interview.overall_recommendation)}
+                          {(interview.overallRecommendation || interview.overall_recommendation).toUpperCase()}
                         </Badge>
                       )}
                     </div>
                   </div>
 
+                  {/* AI Summary - shown inline */}
+                  {interview.professional_summary && (
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-sm">AI Summary</h4>
+                        <Button variant="ghost" size="sm" onClick={() => setExpandedSummary(expandedSummary === interview.id ? null : interview.id)}>
+                          {expandedSummary === interview.id ? 'Collapse' : 'Expand'}
+                        </Button>
+                      </div>
+                      {expandedSummary === interview.id ? (
+                        <p className="text-sm whitespace-pre-wrap">{interview.professional_summary}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{interview.professional_summary.substring(0, 150)}...</p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Scores */}
-                  {interview.technical_score && (
+                  {(interview.technicalScore != null || interview.technical_score != null) && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Technical</div>
-                        <div className="font-bold text-lg">{interview.technical_score}/100</div>
+                        <div className="font-bold text-lg">{interview.technicalScore ?? interview.technical_score}/100</div>
                       </div>
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Communication</div>
-                        <div className="font-bold text-lg">{interview.communication_score || 'N/A'}/100</div>
+                        <div className="font-bold text-lg">{interview.communicationScore ?? interview.communication_score || 'N/A'}/100</div>
                       </div>
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Confidence</div>
-                        <div className="font-bold text-lg">{interview.confidence_score || 'N/A'}/100</div>
+                        <div className="font-bold text-lg">{interview.confidenceScore ?? interview.confidence_score || 'N/A'}/100</div>
                       </div>
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Body Language</div>
-                        <div className="font-bold text-lg">{interview.body_language_score || 'N/A'}/100</div>
+                        <div className="font-bold text-lg">{interview.bodyLanguageScore ?? interview.body_language_score || 'N/A'}/100</div>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Recommendation */}
+                  {(interview.overallRecommendation || interview.overall_recommendation) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Recommendation:</span>
+                      <Badge variant={
+                        (interview.overallRecommendation || interview.overall_recommendation) === 'hire' ? 'default' :
+                        (interview.overallRecommendation || interview.overall_recommendation) === 'reject' ? 'destructive' :
+                        'secondary'
+                      } className="gap-1">
+                        {getRecommendationIcon(interview.overallRecommendation || interview.overall_recommendation)}
+                        {(interview.overallRecommendation || interview.overall_recommendation).toUpperCase()}
+                      </Badge>
                     </div>
                   )}
 
@@ -283,7 +298,7 @@ export default function CandidateDetailPage() {
                       size="sm"
                       onClick={() => setSelectedInterview(interview)}
                     >
-                      View Details
+                      View Full Details
                     </Button>
                     <Button
                       variant="outline"
@@ -293,15 +308,6 @@ export default function CandidateDetailPage() {
                       <Download className="w-4 h-4 mr-2" />
                       Export Q&A (.txt)
                     </Button>
-                    {interview.status === 'completed' && !interview.professional_summary && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => generateAnalysis(interview.id)}
-                      >
-                        Generate AI Analysis
-                      </Button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -332,9 +338,9 @@ export default function CandidateDetailPage() {
                 </TabsList>
 
                 <TabsContent value="summary" className="space-y-4">
-                  {selectedInterview.professional_summary ? (
+                  {(selectedInterview.professional_summary || selectedInterview.aiSummary || selectedInterview.ai_summary) ? (
                     <div className="prose max-w-none">
-                      <p className="whitespace-pre-wrap">{selectedInterview.professional_summary}</p>
+                      <p className="whitespace-pre-wrap">{selectedInterview.professional_summary || selectedInterview.aiSummary || selectedInterview.ai_summary}</p>
                     </div>
                   ) : (
                     <p className="text-muted-foreground text-center py-8">No summary generated yet</p>
@@ -342,10 +348,10 @@ export default function CandidateDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="tech-dna">
-                  {selectedInterview.tech_dna ? (
+                  {(selectedInterview.tech_dna || selectedInterview.techDna) ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {Object.entries(selectedInterview.tech_dna).map(([key, value]) => (
+                        {Object.entries(selectedInterview.tech_dna || selectedInterview.techDna).map(([key, value]) => (
                           <div key={key} className="p-4 border rounded-lg">
                             <h4 className="font-semibold capitalize mb-2">
                               {key.replace(/_/g, ' ')}

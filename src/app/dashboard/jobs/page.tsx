@@ -6,34 +6,13 @@ import Link from "next/link"
 import { Plus, Search, MapPin, DollarSign, Users } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { auth } from '@clerk/nextjs/server'
-import { createServerClient } from '@/lib/supabase-server'
+import { readDatabase } from '@/lib/data-store'
 
 export default async function JobsPage() {
   const { userId, orgId } = await auth()
-  let jobs: any[] = []
+  const db = await readDatabase()
+  const jobs = db.jobs || []
 
-  if (userId) {
-    const supabase = createServerClient()
-
-    const contextId = orgId || await (async () => {
-      const { data: user } = await (supabase as any)
-        .from('users')
-        .select('org_id')
-        .eq('id', userId)
-        .single()
-      return user?.org_id || userId
-    })()
-
-    const { data, error } = await (supabase as any)
-      .from('jobs')
-      .select('*')
-      .eq('org_id', contextId)
-      .order('created_at', { ascending: false })
-
-    if (!error && data) {
-      jobs = data
-    }
-  }
   
   return (
     <div className="space-y-6">
@@ -86,17 +65,17 @@ export default async function JobsPage() {
                       <MapPin className="w-4 h-4" />
                       {job.location}
                     </div>
-                    {job.salary_min && job.salary_max && (
+                    {(job.salaryMin || job.salary_min) && (job.salaryMax || job.salary_max) && (
                       <div className="flex items-center gap-1">
                         <DollarSign className="w-4 h-4" />
-                        {formatCurrency(job.salary_min)} - {formatCurrency(job.salary_max)}
+                        {formatCurrency(job.salaryMin || job.salary_min)} - {formatCurrency(job.salaryMax || job.salary_max)}
                       </div>
                     )}
                     <div className="flex items-center gap-1">
                       <Users className="w-4 h-4" />
                       0 applicants
                     </div>
-                    <div>Posted {formatDate(job.created_at)}</div>
+                    <div>Posted {formatDate(job.createdAt || job.created_at)}</div>
                   </div>
                 </CardContent>
               </Card>

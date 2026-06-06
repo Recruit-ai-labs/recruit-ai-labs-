@@ -1,65 +1,26 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-import { createServerClient } from '@/lib/supabase-server'
+import { readDatabase } from '@/lib/data-store'
 
 export async function GET(request: Request) {
-  try {
-    const { userId, orgId } = await auth()
-    
-    if (!userId || !orgId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const url = new URL(request.url)
+  const jobId = url.searchParams.get('jobId')
+  const stage = url.searchParams.get('stage')
 
-    const supabase = createServerClient()
-    
-    // Get query parameters for filtering
-    const { searchParams } = new URL(request.url)
-    const statusFilter = searchParams.get('status')
-    const statuses = statusFilter ? statusFilter.split(',') : []
+  const db = await readDatabase()
+  let applications = db.applications
 
-    // Fetch applications with job and candidate info
-    let query = supabase
-      .from('applications')
-      .select(`
-        id,
-        stage,
-        jobs (
-          id,
-          title,
-          location
-        ),
-        candidates (
-          id,
-          name,
-          email,
-          phone
-        )
-      `)
-      .eq('jobs.org_id', orgId)
-
-    // Filter by status if provided
-    if (statuses.length > 0) {
-      query = query.in('stage', statuses)
-    }
-
-    const { data: applications, error } = await query as any
-
-    if (error) {
-      console.error('Error fetching applications:', error)
-      return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      applications: applications || [],
-      total: applications?.length || 0
-    })
-  } catch (error: any) {
-    console.error('Applications GET error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch applications' },
-      { status: 500 }
-    )
+  if (jobId) {
+    applications = applications.filter(app => app.jobId === jobId)
   }
-}
+  if (stage) {
+    applications = applications.filter(app => app.stage === stage)
+  }
 
-export const runtime = 'nodejs'
+  const result = applications.map(app => ({
+    ...app,
+    candidates: db.candidates.find(candidate => candidate.id === app.candidateId) || null,
+    jobs: db.jobs.find(job => job.id === app.jobId) || null,
+  }))
+
+  return NextResponse.json({ applications: result })
+}

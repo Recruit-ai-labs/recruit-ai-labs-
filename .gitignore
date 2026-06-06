@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# PocketBase (exclude binary and data)
+pocketbase/pocketbase.exe
+pocketbase/pb_data/
+pocketbase.zip
+
+# Large files
+*.zip
+*.exe

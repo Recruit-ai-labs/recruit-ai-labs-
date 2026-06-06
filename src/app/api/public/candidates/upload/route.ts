@@ -1,104 +1,100 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/pocketbase-server'
-import { processResume } from '@/lib/resume-parser'
+import fs from 'fs/promises'
+import path from 'path'
+import { readDatabase, writeDatabase } from '@/lib/data-store'
+import { generateId } from '@/lib/utils'
 
-export async function POST(request: Request) {
-  try {
-    const pb = createServerClient()
+const uploadDir = path.join(process.cwd(), 'public', 'uploads')
 
-    const formData = await request.formData()
-    const resume = formData.get('resume') as File
-    const name = formData.get('name') as string
-    const email = formData.get('email') as string
-    const phone = formData.get('phone') as string
-    const linkedin = formData.get('linkedin') as string
-    const github = formData.get('github') as string
-    const interviewId = formData.get('interviewId') as string
-
-    if (!resume || !name || !email || !interviewId) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
-
-    // Get interview to find org_id and job_id
-    const interview = await pb.collection('interviews').getOne(interviewId, {
-      expand: 'application_id.job_id,application_id.candidate_id',
-    })
-
-    if (!interview) {
-      return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
-    }
-
-    // Navigate the expanded data to get org_id and job_id
-    // Note: Adjust based on your actual PocketBase relations
-    const orgId = (interview.expand as any)?.application_id?.candidate_id?.org_id
-    const jobId = (interview.expand as any)?.application_id?.job_id?.id
-
-    if (!orgId || !jobId) {
-      return NextResponse.json({ error: 'Invalid interview data' }, { status: 400 })
-    }
-
-    // Convert resume to buffer
-    const bytes = await resume.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-
-    // Process resume using the library function
-    const processedData = await processResume(orgId, buffer, resume.type)
-    const parsedResume = processedData.parsedData
-
-    // Create candidate with resume file
-    const candidateFormData = new FormData()
-    candidateFormData.append('org_id', orgId)
-    candidateFormData.append('name', parsedResume.name || name)
-    candidateFormData.append('email', parsedResume.email || email)
-    candidateFormData.append('phone', phone || parsedResume.phone || '')
-    candidateFormData.append('linkedin_url', linkedin || '')
-    candidateFormData.append('github_url', github || '')
-    
-    // Append resume file (PocketBase handles file upload via FormData)
-    candidateFormData.append('resume', new Blob([buffer]), resume.name)
-    
-    candidateFormData.append('resume_text', parsedResume.summary || '')
-    candidateFormData.append('parsed_skills', JSON.stringify(parsedResume.skills || []))
-    candidateFormData.append('parsed_experience', JSON.stringify(parsedResume.experience || []))
-    candidateFormData.append('parsed_education', JSON.stringify(parsedResume.education || []))
-
-    const candidate = await pb.collection('candidates').create(candidateFormData)
-
-    // Get the resume file URL
-    const resumeUrl = pb.files.getUrl(candidate, candidate.resume)
-
-    // Create application if not already exists
-    const existingApps = await pb.collection('applications').getList(1, 1, {
-      filter: `job_id = "${jobId}" && candidate_id = "${candidate.id}"`,
-    })
-
-    if (existingApps.items.length === 0) {
-      await pb.collection('applications').create({
-        job_id: jobId,
-        candidate_id: candidate.id,
-        stage: 'interview',
-        source: 'direct',
-      })
-    }
-
-    return NextResponse.json({
-      message: 'Resume uploaded and candidate created successfully',
-      candidateId: candidate.id,
-      candidate: {
-        ...candidate,
-        resume_url: resumeUrl,
-      },
-    })
-  } catch (error: any) {
-    console.error('Resume upload error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to upload resume' },
-      { status: 500 }
-    )
-  }
+async function saveUploadedFile(file: File, fileName: string) {
+  await fs.mkdir(uploadDir, { recursive: true })
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  const filePath = path.join(uploadDir, fileName)
+  await fs.writeFile(filePath, buffer)
+  return `/uploads/${fileName}`
 }
 
-export const runtime = 'nodejs'
+async function parseResumeText(file: File) {
+  const text = await file.text()
+  return text.slice(0, 5000)
+}
+
+export async function POST(request: Request) {
+  const formData = await request.formData()
+  const resume = formData.get('resume') as File | null
+  const name = formData.get('name') as string | null
+  const email = formData.get('email') as string | null
+  const phone = formData.get('phone') as string | null
+  const linkedin = formData.get('linkedin') as string | null
+  const github = formData.get('github') as string | null
+  const interviewId = formData.get('interviewId') as string | null
+
+  if (!resume || !name || !email || !interviewId) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  }
+
+  const db = await readDatabase()
+  const interviewIndex = db.interviews.findIndex(item => item.id === interviewId)
+
+  if (interviewIndex === -1) {
+    return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
+  }
+
+  const resumeUrl = await saveUploadedFile(resume, `${generateId()}-${resume.name}`)
+  const resumeText = await parseResumeText(resume)
+  const skillKeywords = ['react', 'node', 'typescript', 'javascript', 'python', 'aws', 'docker', 'sql', 'graphql', 'nextjs']
+  const parsedSkills = skillKeywords.filter(skill => resumeText.toLowerCase().includes(skill))
+  const candidate = {
+    id: generateId(),
+    orgId: 'default',
+    name,
+    email,
+    phone: phone || null,
+    linkedinUrl: linkedin || null,
+    githubUrl: github || null,
+    resumeUrl,
+    resumeText,
+    parsedSkills,
+    parsedExperience: [],
+    parsedEducation: [],
+    aiSummary: `Candidate ${name} applied with resume uploaded and shows skills: ${parsedSkills.join(', ')}`,
+    aiMatchScore: null,
+    embedding: null,
+    createdAt: new Date().toISOString(),
+  }
+
+  db.candidates.push(candidate)
+
+  const interview = db.interviews[interviewIndex]
+  let applicationId = interview.applicationId
+
+  if (!applicationId) {
+    const application = {
+      id: generateId(),
+      jobId: interview.jobId || '',
+      candidateId: candidate.id,
+      stage: 'interview',
+      aiMatchScore: null,
+      source: 'direct',
+      appliedAt: new Date().toISOString(),
+      lastActivityAt: new Date().toISOString(),
+    }
+    db.applications.push(application)
+    applicationId = application.id
+    db.interviews[interviewIndex] = { ...interview, applicationId }
+  } else {
+    const applicationIndex = db.applications.findIndex(app => app.id === applicationId)
+    if (applicationIndex !== -1) {
+      db.applications[applicationIndex] = {
+        ...db.applications[applicationIndex],
+        candidateId: candidate.id,
+        stage: 'interview',
+        lastActivityAt: new Date().toISOString(),
+      }
+    }
+  }
+
+  await writeDatabase(db)
+  return NextResponse.json({ candidate, interview: db.interviews[interviewIndex] })
+}

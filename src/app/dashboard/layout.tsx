@@ -1,4 +1,3 @@
-import { UserButton } from '@clerk/nextjs'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -11,7 +10,7 @@ import {
   Settings,
   Menu
 } from 'lucide-react'
-
+import UserButtonClient from '../../components/client/user-button-client'
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Briefcase, label: 'Jobs', href: '/dashboard/jobs' },
@@ -66,7 +65,7 @@ export default async function DashboardLayout({
           </div>
           
           <div className="flex items-center gap-4">
-            <UserButton />
+            <UserButtonClient />
           </div>
         </header>
         

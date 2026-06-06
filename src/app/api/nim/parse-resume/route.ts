@@ -1,85 +1,73 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-import { processResume, saveCandidateToDatabase } from '@/lib/resume-parser'
-import { trackEvent, RecruitmentEvents } from '@/lib/analytics'
+import { generateId } from '@/lib/utils'
+import { readDatabase, writeDatabase } from '@/lib/data-store'
+import fs from 'fs/promises'
+import path from 'path'
 
-export async function POST(request: Request) {
+const uploadDir = path.join(process.cwd(), 'public', 'uploads')
+
+async function saveFile(file: File) {
+  await fs.mkdir(uploadDir, { recursive: true })
+  const fileName = `${generateId()}-${file.name}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const pathName = path.join(uploadDir, fileName)
+  await fs.writeFile(pathName, buffer)
+  return `/uploads/${fileName}`
+}
+
+async function parseText(file: File) {
   try {
-    const { userId, orgId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    
-    const contextId = orgId || userId!
-    
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    const jobId = formData.get('jobId') as string
-    
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
-    }
-    
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid file type. Only PDF and DOCX are allowed.' }, { status: 400 })
-    }
-    
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    
-    // Process resume
-    const result = await processResume(contextId, buffer, file.type)
-    
-    // Calculate match score if job is provided
-    let matchScore: number | undefined
-    if (jobId) {
-      const { createServerClient } = await import('@/lib/supabase-server')
-      const supabase = createServerClient()
-      
-      const { data: job } = await (supabase as any)
-        .from('jobs')
-        .select('requirements')
-        .eq('id', jobId)
-        .single()
-      
-      if (job) {
-        const { calculateMatchScore } = await import('@/lib/resume-parser')
-        matchScore = await calculateMatchScore(
-          contextId,
-          job.requirements,
-          `${result.parsedData.skills.join(' ')} ${result.parsedData.summary} ${result.parsedData.experience.map(e => `${e.title} ${e.company}`).join(' ')}`
-        )
-      }
-    }
-    
-    // Save candidate to database
-    const candidate = await saveCandidateToDatabase(
-      contextId,
-      result.resumeText,
-      result.parsedData,
-      result.aiSummary,
-      result.embedding,
-      matchScore
-    )
-    
-    // Track event
-    trackEvent(RecruitmentEvents.RESUME_UPLOADED, {
-      candidateId: candidate.id,
-      jobId,
-    })
-    
-    return NextResponse.json({ success: true, candidate })
-  } catch (error: any) {
-    console.error('Resume parsing error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Failed to process resume' },
-      { status: 500 }
-    )
+    const text = await file.text()
+    return text
+  } catch {
+    return ''
   }
 }
 
-export const runtime = 'nodejs'
+function extractSkills(text: string) {
+  const keywords = ['react', 'node', 'typescript', 'javascript', 'python', 'aws', 'docker', 'kubernetes', 'sql', 'graphql', 'nextjs']
+  return Array.from(new Set(keywords.filter(skill => text.toLowerCase().includes(skill))))
+}
+
+export async function POST(request: Request) {
+  const formData = await request.formData()
+  const file = formData.get('file') as File | null
+
+  if (!file) {
+    return NextResponse.json({ error: 'Resume file is required' }, { status: 400 })
+  }
+
+  const resumeUrl = await saveFile(file)
+  const resumeText = await parseText(file)
+  const parsedSkills = extractSkills(resumeText)
+  const parsedExperience = []
+  const parsedEducation = []
+  const aiSummary = parsedSkills.length
+    ? `AI parsed resume and found skills: ${parsedSkills.join(', ')}`
+    : 'Resume parsed successfully. No skills were extracted automatically.'
+
+  const candidate = {
+    id: generateId(),
+    orgId: 'default',
+    name: '',
+    email: '',
+    phone: null,
+    linkedinUrl: null,
+    githubUrl: null,
+    resumeUrl,
+    resumeText,
+    parsedSkills,
+    parsedExperience,
+    parsedEducation,
+    aiSummary,
+    aiMatchScore: null,
+    embedding: null,
+    createdAt: new Date().toISOString(),
+  }
+
+  const db = await readDatabase()
+  db.candidates.push(candidate)
+  await writeDatabase(db)
+
+  return NextResponse.json({ candidate })
+}
