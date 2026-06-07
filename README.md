@@ -1,6 +1,21 @@
-# RecruitAI - AI-Powered Recruitment Platform
+# Recruit AI Labs — Autonomous Recruitment Intelligence Ecosystem
 
-A modern, full-stack SaaS recruitment platform powered by **NVIDIA NIM APIs** for intelligent resume parsing, semantic candidate matching, automated job description generation, and AI-driven interviews. Built with Next.js, TypeScript, and PocketBase.
+[![Google Developer Expert](https://img.shields.io/badge/GDE-Machine%20Learning-blue.svg)](https://developers.google.com/profile)
+[![Live Platform](https://img.shields.io/badge/Live-recruitailabs.vercel.app-darkgreen.svg)](https://recruitailabs.vercel.app)
+[![Research Monograph](https://img.shields.io/badge/Author-The%20Theory%20of%20Deep%20Learning-orange.svg)](https://github.com/Aadil-hussain-786/The-Theory-of-Deep-Learning-/blob/main/The%20Theory%20of%20Deep%20Learning.pdf)
+
+An end-to-end autonomous recruitment intelligence environment designed to automate candidate discovery, screening pipelines, and continuous evaluation loops. This ecosystem bypasses traditional brute-force heuristics by integrating intelligent decision architectures, multi-agent coordination layers, and custom data routing pipelines.
+
+---
+
+## Core Engineering Assets & Architecture Interlocking
+
+This repository serves as the production-grade deployment nexus for my end-to-end engineering and research ecosystem. It operationalizes the advanced deep learning principles, full-stack scalability, and optimization matrices detailed across my core works:
+
+1. **Autonomous Intelligence Platform:** **[Recruit AI Labs Live](https://recruitailabs.vercel.app)** — A live-deployed, high-scale full-stack environment actively handling multi-agent workflows and evaluation clusters from talent discovery to final hiring pipeline orchestration.
+2. **Research Literature:** **[The Theory of Deep Learning Monograph](https://github.com/Aadil-hussain-786/The-Theory-of-Deep-Learning-/blob/main/The%20Theory%20of%20Deep%20Learning.pdf)** — A 74-page comprehensive technical publication authored to mathematically map gradient descent constraints, neural architectural topology, and custom loss landscape optimization mechanics.
+
+---
 
 ## 🚀 Features
 
