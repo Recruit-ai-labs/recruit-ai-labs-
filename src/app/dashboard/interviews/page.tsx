@@ -15,20 +15,20 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Calendar, Clock, User, Briefcase, Video, ExternalLink, Loader2, Plus, X, Copy } from 'lucide-react'
+import { Calendar, Clock, User, Briefcase, Video, ExternalLink, Loader2, Plus, X, Copy, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 
 interface Interview {
   id: string
-  application_id: string
-  scheduled_at: string
-  interviewer_id: string
+  applicationId: string
+  scheduledAt: string
+  interviewerId: string
   status: string
   questions: string | any[]
-  interview_link: string
-  video_link: string
-  created: string
+  interviewLink: string
+  videoLink: string
+  createdAt: string
   applications: {
     id: string
     stage: string
@@ -158,6 +158,7 @@ export default function InterviewsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           applicationId: createForm.applicationId,
+          jobId: createForm.jobId,
           scheduledAt: createForm.scheduledAt,
           interviewerId: '',
           interviewType: createForm.interviewType,
@@ -210,6 +211,20 @@ export default function InterviewsPage() {
     return questions?.length || 0
   }
 
+  const handleDeleteInterview = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm('Are you sure you want to delete this interview?')) return
+    try {
+      const response = await fetch(`/api/interviews/${id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Failed to delete')
+      toast.success('Interview deleted')
+      fetchInterviews()
+    } catch {
+      toast.error('Failed to delete interview')
+    }
+  }
+
   const renderInterviewCard = (interview: Interview) => (
     <Card key={interview.id} className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -223,15 +238,25 @@ export default function InterviewsPage() {
               {interview.applications?.jobs?.title || 'Unknown Position'}
             </CardDescription>
           </div>
-          <Badge className={statusColors[interview.status] || 'bg-gray-100 text-gray-800'}>
-            {interview.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge className={statusColors[interview.status] || 'bg-gray-100 text-gray-800'}>
+              {interview.status}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={(e) => handleDeleteInterview(interview.id, e)}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="w-4 h-4" />
-          {formatDateTime(interview.scheduled_at)}
+          {formatDateTime(interview.scheduledAt)}
         </div>
 
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -254,12 +279,15 @@ export default function InterviewsPage() {
               View Session
             </Button>
           </Link>
-          {interview.interview_link && (
+          {interview.interviewLink && (
             <Button
               variant="outline"
               size="sm"
               className="gap-1"
-              onClick={() => window.open(interview.interview_link, '_blank')}
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}${interview.interviewLink}`)
+                toast.success('Link copied!')
+              }}
             >
               <ExternalLink className="w-3.5 h-3.5" />
               Copy Link
@@ -314,7 +342,7 @@ export default function InterviewsPage() {
                     <div className="text-sm text-muted-foreground">Loading jobs...</div>
                   ) : (
                     <Select
-                      value={createForm.jobId || undefined}
+                      value={createForm.jobId}
                       onValueChange={(value: string | null) => setCreateForm({ ...createForm, jobId: value || '', applicationId: '' })}
                     >
                       <SelectTrigger>
@@ -346,7 +374,7 @@ export default function InterviewsPage() {
                     <div className="text-sm text-muted-foreground">Loading applicants...</div>
                   ) : (
                     <Select
-                      value={createForm.applicationId || undefined}
+                      value={createForm.applicationId}
                       onValueChange={(value: string | null) => setCreateForm({ ...createForm, applicationId: value || '' })}
                     >
                       <SelectTrigger>

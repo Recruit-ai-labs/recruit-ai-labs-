@@ -52,9 +52,9 @@ export default function CandidateDetailPage() {
     content += `Candidate: ${interview.applications?.candidates?.name}\n`
     content += `Position: ${interview.applications?.jobs?.title}\n`
     content += `Date: ${new Date(interview.createdAt || interview.created_at).toLocaleString()}\n`
-    content += `Overall Score: ${interview.technicalScore ?? interview.technical_score || 'N/A'}/100\n`
+    content += `Overall Score: ${(interview.technicalScore ?? interview.technical_score) || 'N/A'}/100\n`
     content += `Recommendation: ${interview.overallRecommendation || interview.overall_recommendation || 'N/A'}\n`
-    content += `Cheating Warnings: ${interview.cheatingWarnings ?? interview.cheating_warnings || 0}\n\n`
+    content += `Cheating Warnings: ${(interview.cheatingWarnings ?? interview.cheating_warnings) || 0}\n\n`
     
     if (interview.professional_summary || interview.aiSummary || interview.ai_summary) {
       content += `PROFESSIONAL SUMMARY:\n${interview.professional_summary || interview.aiSummary || interview.ai_summary}\n\n`
@@ -209,7 +209,7 @@ export default function CandidateDetailPage() {
                       <div className="flex gap-4 text-sm text-muted-foreground mt-1">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {formatDate(interview.created_at)}
+                          {formatDate(interview.createdAt || interview.created_at)}
                         </span>
                         <span>Status: {interview.status}</span>
                       </div>
@@ -259,19 +259,19 @@ export default function CandidateDetailPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Technical</div>
-                        <div className="font-bold text-lg">{interview.technicalScore ?? interview.technical_score}/100</div>
+                        <div className="font-bold text-lg">{(interview.technicalScore ?? interview.technical_score) || 'N/A'}/100</div>
                       </div>
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Communication</div>
-                        <div className="font-bold text-lg">{interview.communicationScore ?? interview.communication_score || 'N/A'}/100</div>
+                        <div className="font-bold text-lg">{(interview.communicationScore ?? interview.communication_score) || 'N/A'}/100</div>
                       </div>
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Confidence</div>
-                        <div className="font-bold text-lg">{interview.confidenceScore ?? interview.confidence_score || 'N/A'}/100</div>
+                        <div className="font-bold text-lg">{(interview.confidenceScore ?? interview.confidence_score) || 'N/A'}/100</div>
                       </div>
                       <div className="p-3 bg-muted rounded">
                         <div className="text-muted-foreground">Body Language</div>
-                        <div className="font-bold text-lg">{interview.bodyLanguageScore ?? interview.body_language_score || 'N/A'}/100</div>
+                        <div className="font-bold text-lg">{(interview.bodyLanguageScore ?? interview.body_language_score) || 'N/A'}/100</div>
                       </div>
                     </div>
                   )}

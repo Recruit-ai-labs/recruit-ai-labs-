@@ -6,19 +6,50 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, MapPin, DollarSign, Calendar, Users, FileText, Plus } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { readDatabase } from '@/lib/data-store'
-import InterviewLinks from '@/components/interview-links-display'
+import { readDatabase, type FullDB } from '@/lib/data-store'
+import { InterviewLinksDisplay as InterviewLinks } from '@/components/interview-links-display'
+import JobDeleteButton from '@/components/job-delete-button'
 
 export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { userId, orgId } = await auth()
+
+  let userId: string | null = null
+  try {
+    const authResult = await auth()
+    userId = authResult.userId
+  } catch (error) {
+    console.error('Auth error in JobDetailPage:', error)
+  }
 
   if (!userId) {
     notFound()
   }
 
   // Fetch actual job from database
-  const db = await readDatabase()
+  let db: FullDB
+  try {
+    db = await readDatabase()
+  } catch (error) {
+    console.error('Failed to read database in JobDetailPage:', error)
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/jobs">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Jobs
+            </Button>
+          </Link>
+        </div>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-destructive font-medium">Failed to load job data. Please try again later.</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const job = db.jobs.find(j => j.id === id)
   
   if (!job) {
@@ -66,9 +97,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </span>
           </div>
         </div>
-        <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
-          {job.status}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={job.status === 'active' ? 'default' : 'secondary'}>
+            {job.status}
+          </Badge>
+          <JobDeleteButton jobId={job.id} />
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

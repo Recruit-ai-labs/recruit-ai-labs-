@@ -36,11 +36,15 @@ export default function InterviewSessionPage() {
     interviewId,
     maxWarnings: 3,
     onRedlist: async () => {
-      await fetch(`/api/interviews/${interviewId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'redlisted' }),
-      })
+      try {
+        await fetch(`/api/interviews/${interviewId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'redlisted' }),
+        })
+      } catch (error) {
+        console.error('Failed to update redlist status:', error)
+      }
       toast.error('Interview terminated due to cheating')
       router.push('/dashboard/interviews')
     },
@@ -111,22 +115,28 @@ export default function InterviewSessionPage() {
     stopRecording()
     stopMonitoring()
     
-    await fetch(`/api/interviews/${interviewId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'completed' }),
-    })
-    
-    toast.success('Interview completed! Generating Tech DNA...')
-    
-    // Trigger Tech DNA generation
-    await fetch('/api/interviews/generate-tech-dna', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ interviewId }),
-    })
-    
-    router.push('/dashboard/interviews')
+    try {
+      const response = await fetch(`/api/interviews/${interviewId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' }),
+      })
+      if (!response.ok) throw new Error('Failed to update interview status')
+
+      toast.success('Interview completed! Generating Tech DNA...')
+
+      // Trigger Tech DNA generation
+      await fetch('/api/interviews/generate-tech-dna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interviewId }),
+      })
+    } catch (error) {
+      console.error('Error ending interview:', error)
+      toast.error('Interview recorded but some post-processing may have failed')
+    } finally {
+      router.push('/dashboard/interviews')
+    }
   }
 
   if (loading) {
@@ -158,7 +168,7 @@ export default function InterviewSessionPage() {
               <div className="space-y-2">
                 <h3 className="text-xl font-semibold">Candidate: {interview.applications?.candidates?.name}</h3>
                 <p className="text-muted-foreground">Position: {interview.applications?.jobs?.title}</p>
-                <p className="text-muted-foreground">Scheduled: {new Date(interview.scheduled_at).toLocaleString()}</p>
+                <p className="text-muted-foreground">Scheduled: {new Date(interview.scheduledAt).toLocaleString()}</p>
               </div>
 
               <div className="space-y-2">

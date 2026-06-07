@@ -8,13 +8,15 @@ import {
   Calendar, 
   BarChart3, 
   Settings,
-  Menu
+  Menu,
+  Radar
 } from 'lucide-react'
 import UserButtonClient from '../../components/client/user-button-client'
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Briefcase, label: 'Jobs', href: '/dashboard/jobs' },
   { icon: Users, label: 'Candidates', href: '/dashboard/candidates' },
+  { icon: Radar, label: 'Discover', href: '/dashboard/discover' },
   { icon: Calendar, label: 'Interviews', href: '/dashboard/interviews' },
   { icon: BarChart3, label: 'Analytics', href: '/dashboard/analytics' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },

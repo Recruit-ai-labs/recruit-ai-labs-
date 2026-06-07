@@ -3,83 +3,102 @@ import { readDatabase, writeDatabase } from '@/lib/data-store'
 import { generateId } from '@/lib/utils'
 
 export async function GET() {
-  const db = await readDatabase()
-  const upcoming = db.interviews.filter(i => ['scheduled', 'in_progress'].includes(i.status))
-  const past = db.interviews.filter(i => ['completed', 'cancelled', 'redlisted'].includes(i.status))
+  try {
+    const db = await readDatabase()
+    const upcoming = db.interviews.filter(i => ['scheduled', 'in_progress'].includes(i.status))
+    const past = db.interviews.filter(i => ['completed', 'cancelled', 'redlisted'].includes(i.status))
 
-  const normalized = (items: typeof db.interviews) => items.map(interview => {
-    const application = db.applications.find(app => app.id === interview.applicationId) || null
-    return {
-      ...interview,
-      applications: application ? {
-        ...application,
-        candidates: db.candidates.find(candidate => candidate.id === application.candidateId) || null,
-        jobs: db.jobs.find(job => job.id === application.jobId) || null,
-      } : null,
-    }
-  })
+    const normalized = (items: typeof db.interviews) => items.map(interview => {
+      const application = db.applications.find(app => app.id === interview.applicationId) || null
+      return {
+        ...interview,
+        applications: application ? {
+          ...application,
+          candidates: db.candidates.find(candidate => candidate.id === application.candidateId) || null,
+          jobs: db.jobs.find(job => job.id === application.jobId) || null,
+        } : null,
+      }
+    })
 
-  return NextResponse.json({ upcoming: normalized(upcoming), past: normalized(past) })
+    return NextResponse.json({ upcoming: normalized(upcoming), past: normalized(past) })
+  } catch (error) {
+    console.error('Error fetching interviews:', error)
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
-  const body = await request.json()
-  const { applicationId, jobId, scheduledAt, interviewerId = '', interviewType = 'mixed', generateQuestions = true, notes = '' } = body
+  try {
+    const body = await request.json()
+    const { applicationId, jobId, scheduledAt, interviewerId = '', interviewType = 'mixed', generateQuestions = true, notes = '' } = body
 
-  if (!scheduledAt) {
-    return NextResponse.json({ error: 'Interview date is required' }, { status: 400 })
-  }
-
-  const db = await readDatabase()
-  let actualApplicationId = applicationId
-
-  if (!actualApplicationId && jobId) {
-    const application = {
-      id: generateId(),
-      jobId,
-      candidateId: '',
-      stage: 'new',
-      aiMatchScore: null,
-      source: 'direct',
-      appliedAt: new Date().toISOString(),
-      lastActivityAt: new Date().toISOString(),
+    if (!scheduledAt) {
+      return NextResponse.json({ error: 'Interview date is required' }, { status: 400 })
     }
-    db.applications.push(application)
-    actualApplicationId = application.id
+
+    const db = await readDatabase()
+    let actualApplicationId = applicationId
+    let resolvedJobId = jobId
+
+    if (!actualApplicationId && resolvedJobId) {
+      const application = {
+        id: generateId(),
+        jobId: resolvedJobId,
+        candidateId: '',
+        stage: 'new',
+        aiMatchScore: null,
+        source: 'direct',
+        appliedAt: new Date().toISOString(),
+        lastActivityAt: new Date().toISOString(),
+      }
+      db.applications.push(application)
+      actualApplicationId = application.id
+    }
+
+    // If we have an applicationId but no jobId, resolve jobId from application
+    if (!resolvedJobId && actualApplicationId) {
+      const app = db.applications.find(a => a.id === actualApplicationId)
+      if (app) resolvedJobId = app.jobId
+    }
+
+    const token = generateId()
+    const interview = {
+      id: generateId(),
+      applicationId: actualApplicationId || null,
+      jobId: resolvedJobId || null,
+      scheduledAt,
+      calendarEventId: null,
+      videoLink: null,
+      interviewerId,
+      feedback: null,
+      rating: null,
+      questions: generateQuestions ? getDefaultQuestions(interviewType) : [],
+      answers: [],
+      techDna: null,
+      status: 'scheduled',
+      cheatingWarnings: 0,
+      confidenceScore: null,
+      bodyLanguageScore: null,
+      communicationScore: null,
+      technicalScore: null,
+      overallRecommendation: null,
+      createdAt: new Date().toISOString(),
+      interviewLink: `/interview/${token}`,
+      publicToken: token,
+      notes,
+      interviewType,
+    }
+
+    db.interviews.push(interview)
+    await writeDatabase(db)
+
+    return NextResponse.json({ interviewLink: interview.interviewLink, interview })
+  } catch (error) {
+    console.error('Error creating interview:', error)
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-
-  const token = generateId()
-  const interview = {
-    id: generateId(),
-    applicationId: actualApplicationId || null,
-    jobId: jobId || null,
-    scheduledAt,
-    calendarEventId: null,
-    videoLink: null,
-    interviewerId,
-    feedback: null,
-    rating: null,
-    questions: generateQuestions ? getDefaultQuestions(interviewType) : [],
-    answers: [],
-    techDna: null,
-    status: 'scheduled',
-    cheatingWarnings: 0,
-    confidenceScore: null,
-    bodyLanguageScore: null,
-    communicationScore: null,
-    technicalScore: null,
-    overallRecommendation: null,
-    createdAt: new Date().toISOString(),
-    interviewLink: `/interview/${token}`,
-    publicToken: token,
-    notes,
-    interviewType,
-  }
-
-  db.interviews.push(interview)
-  await writeDatabase(db)
-
-  return NextResponse.json({ interviewLink: interview.interviewLink, interview })
 }
 
 function getDefaultQuestions(type: string) {

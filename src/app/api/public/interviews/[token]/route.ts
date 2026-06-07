@@ -1,48 +1,65 @@
 import { NextResponse } from 'next/server'
 import { readDatabase, writeDatabase } from '@/lib/data-store'
 
-export async function GET(request: Request, { params }: { params: { token: string } }) {
-  const token = params.token
-  const db = await readDatabase()
-  const interview = db.interviews.find(item => item.publicToken === token)
+export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
+  try {
+    const { token } = await params
+    const db = await readDatabase()
+    // Match by publicToken or by interviewLink containing the token (fallback for older records)
+    const interview = db.interviews.find(
+      item => item.publicToken === token || item.interviewLink?.includes(token)
+    )
 
-  if (!interview) {
-    return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
-  }
+    if (!interview) {
+      return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
+    }
 
-  const application = interview.applicationId ? db.applications.find(app => app.id === interview.applicationId) : null
-  const candidate = application ? db.candidates.find(c => c.id === application.candidateId) : null
-  const job = application ? db.jobs.find(job => job.id === application.jobId) : db.jobs.find(job => job.id === interview.jobId)
+    const application = interview.applicationId ? db.applications.find(app => app.id === interview.applicationId) : null
+    const candidate = application ? db.candidates.find(c => c.id === application.candidateId) : null
+    const job = application ? db.jobs.find(job => job.id === application.jobId) : db.jobs.find(job => job.id === interview.jobId)
 
-  return NextResponse.json({
-    interview: {
-      ...interview,
-      applications: {
-        candidates: candidate,
-        jobs: job,
+    return NextResponse.json({
+      interview: {
+        ...interview,
+        applications: {
+          candidates: candidate,
+          jobs: job,
+        },
       },
-    },
-  })
+    })
+  } catch (error) {
+    console.error('Error fetching public interview:', error)
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
 }
 
-export async function PATCH(request: Request, { params }: { params: { token: string } }) {
-  const token = params.token
-  const body = await request.json()
-  const db = await readDatabase()
-  const interviewIndex = db.interviews.findIndex(item => item.publicToken === token)
+export async function PATCH(request: Request, { params }: { params: Promise<{ token: string }> }) {
+  try {
+    const { token } = await params
+    const body = await request.json()
+    const db = await readDatabase()
+    const interviewIndex = db.interviews.findIndex(
+      item => item.publicToken === token || item.interviewLink?.includes(token)
+    )
 
-  if (interviewIndex === -1) {
-    return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
+    if (interviewIndex === -1) {
+      return NextResponse.json({ error: 'Interview not found' }, { status: 404 })
+    }
+
+    const interview = db.interviews[interviewIndex]
+    const updated = {
+      ...interview,
+      ...body,
+    }
+
+    db.interviews[interviewIndex] = updated
+    await writeDatabase(db)
+
+    return NextResponse.json({ interview: updated })
+  } catch (error) {
+    console.error('Error updating public interview:', error)
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-
-  const interview = db.interviews[interviewIndex]
-  const updated = {
-    ...interview,
-    ...body,
-  }
-
-  db.interviews[interviewIndex] = updated
-  await writeDatabase(db)
-
-  return NextResponse.json({ interview: updated })
 }

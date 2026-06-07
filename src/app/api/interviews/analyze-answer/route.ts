@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const normalizedAnswer = answer.trim().toLowerCase()
   const normalizedExpected = (expectedAnswer || '').toLowerCase()
   const baseScore = normalizedAnswer.length > 50 ? 70 : 50
-  const keywordBonus = normalizedExpected.split(' ').filter(word => word && normalizedAnswer.includes(word)).length
+  const keywordBonus = normalizedExpected.split(' ').filter((word: string) => word && normalizedAnswer.includes(word.toLowerCase())).length
   const score = Math.min(100, baseScore + Math.min(30, keywordBonus * 3))
 
   const strengths = ['Clear structure', 'Relevant examples']

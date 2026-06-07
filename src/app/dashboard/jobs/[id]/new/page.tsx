@@ -45,7 +45,7 @@ export default function CreateInterviewPage() {
       const interview = data.interview || data
 
       const publicToken = interview.publicToken || interview.public_token
-      const link = `http://localhost:3001/interview/${publicToken}`
+      const link = `${window.location.origin}/interview/${publicToken}`
 
       setInterviewId(interview.id)
       setInterviewLink(link)
