@@ -1,10 +1,25 @@
-# RecruitAI - AI-Powered Recruitment Platform
+# Recruit AI Labs — Autonomous Recruitment Intelligence Ecosystem
 
-A modern, full-stack SaaS recruitment platform powered by **NVIDIA NIM APIs** for intelligent resume parsing, semantic candidate matching, automated job description generation, and AI-driven interviews. Built with Next.js, TypeScript, and PocketBase.
+[![Google Developer Expert](https://img.shields.io/badge/GDE-Machine%20Learning-blue.svg)](https://developers.google.com/profile)
+[![Live Platform](https://img.shields.io/badge/Live-recruitailabs.vercel.app-darkgreen.svg)](https://recruitailabs.vercel.app)
+[![Research Monograph](https://img.shields.io/badge/Author-The%20Theory%20of%20Deep%20Learning-orange.svg)](https://github.com/Aadil-hussain-786/The-Theory-of-Deep-Learning-/blob/main/The%20Theory%20of%20Deep%20Learning.pdf)
 
-## 🚀 Features
+An end-to-end autonomous recruitment intelligence environment designed to automate candidate discovery, screening pipelines, and continuous evaluation loops. This ecosystem bypasses traditional brute-force heuristics by integrating intelligent decision architectures, multi-agent coordination layers, and custom data routing pipelines.
 
-### AI-Powered (NVIDIA NIM)
+---
+
+## Core Engineering Assets & Architecture Interlocking
+
+This repository serves as the production-grade deployment nexus for my end-to-end engineering and research ecosystem. It operationalizes the advanced deep learning principles, full-stack scalability, and optimization matrices detailed across my core works:
+
+1. **Autonomous Intelligence Platform:** **[Recruit AI Labs Live](https://recruitailabs.vercel.app)** — A live-deployed, high-scale full-stack environment actively handling multi-agent workflows and evaluation clusters from talent discovery to final hiring pipeline orchestration.
+2. **Research Literature:** **[The Theory of Deep Learning Monograph](https://github.com/Aadil-hussain-786/The-Theory-of-Deep-Learning-/blob/main/The%20Theory%20of%20Deep%20Learning.pdf)** — A 74-page comprehensive technical publication authored to mathematically map gradient descent constraints, neural architectural topology, and custom loss landscape optimization mechanics.
+
+---
+
+## Features
+
+### AI-Powered 
 - **Resume Parsing** - Extract structured data from PDF/DOCX using LLM
 - **Semantic Search** - 1024-dim vector embeddings with cosine similarity search
 - **Job Description Generator** - AI-generated compelling JDs
@@ -21,7 +36,7 @@ A modern, full-stack SaaS recruitment platform powered by **NVIDIA NIM APIs** fo
 - **Stripe Billing** - Subscription management with usage-based pricing
 - **Analytics Dashboard** - NIM usage tracking and pipeline metrics
 
-## 📋 Tech Stack
+## Tech Stack
 
 - **Frontend**: Next.js 16+, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion
 - **Database**: PocketBase (SQLite-based, self-hosted)
@@ -34,7 +49,7 @@ A modern, full-stack SaaS recruitment platform powered by **NVIDIA NIM APIs** fo
 - **SMS/Voice**: Twilio
 - **Analytics**: PostHog
 
-## 🛠️ Setup
+## Setup
 
 ### Prerequisites
 - Node.js 20+
@@ -130,7 +145,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 src/
@@ -182,7 +197,7 @@ scripts/
 └── setup-pocketbase.ts  # Automated collection setup
 ```
 
-## 🎯 Key AI Workflows
+## Key AI Workflows
 
 ### Resume Parsing Pipeline
 1. User uploads PDF/DOCX
@@ -208,7 +223,7 @@ scripts/
 4. Auto-generate embedding for semantic job search
 5. Store in database and syndicate to job boards
 
-## 💰 Pricing Plans
+## Pricing Plans
 
 | Feature | Free | Pro ($99/mo) | Enterprise ($499/mo) |
 |---------|------|--------------|---------------------|
@@ -219,7 +234,7 @@ scripts/
 | Team Members | 1 | 10 | Unlimited |
 | Self-hosted NIM | ❌ | ❌ | ✅ |
 
-## 🔒 Security
+## Security
 
 - **Organization-based Access** - All queries scoped to organization
 - **Clerk Auth** - Secure authentication with RBAC
@@ -228,7 +243,7 @@ scripts/
 - **Rate Limiting** - Exponential backoff on NIM 429 errors
 - **API Rules** - PocketBase collection-level access control
 
-## 🚀 Deployment
+## Deployment
 
 ### Vercel (Recommended)
 ```bash
@@ -248,9 +263,9 @@ Add all variables from `.env.local.example` in Vercel dashboard.
 Configure webhook endpoint: `https://your-domain.com/api/webhooks/stripe`
 Events: `checkout.session.completed`, `customer.subscription.*`
 
-## 📊 NIM Usage Tracking
+##  Usage Tracking
 
-All NIM API calls are logged to `nim_logs` table:
+All API calls are logged to `nim_logs` table:
 - Model used
 - Endpoint called
 - Input/output tokens
@@ -259,7 +274,7 @@ All NIM API calls are logged to `nim_logs` table:
 
 View usage in `/dashboard/analytics` under "NIM Usage" tab.
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
@@ -267,11 +282,11 @@ View usage in `/dashboard/analytics` under "NIM Usage" tab.
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## 📝 License
+## License
 
 MIT License - see LICENSE file for details
 
-## 🆘 Support
+## Support
 
 - Documentation: [Link to docs]
 - Issues: [GitHub Issues]
