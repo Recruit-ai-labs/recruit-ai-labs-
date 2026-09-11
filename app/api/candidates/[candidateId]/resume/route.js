@@ -11,7 +11,14 @@ export async function GET(_request, { params }) {
   const candidate = await getCandidateForWorkspace(context.workspace.id, candidateId);
   if (!candidate?.resume) return new Response('Resume not found', { status: 404 });
   const filename = Array.isArray(candidate.resume) ? candidate.resume[0] : candidate.resume;
-  const source = await pbRawRequest(`/api/files/candidates/${encodeURIComponent(candidate.id)}/${encodeURIComponent(filename)}`);
+  let source;
+  if (candidate.resume_url) {
+    const blobResponse = await fetch(candidate.resume_url, { cache: 'no-store' });
+    if (!blobResponse.ok) return new Response('Resume not found', { status: 404 });
+    source = blobResponse;
+  } else {
+    source = await pbRawRequest(`/api/files/candidates/${encodeURIComponent(candidate.id)}/${encodeURIComponent(filename)}`);
+  }
   return new Response(source.body, {
     status: 200,
     headers: {
