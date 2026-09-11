@@ -1,0 +1,2 @@
+import {SignIn,UserButton} from '@clerk/nextjs';
+export default function CandidateSignIn({path,signedIn=false}) {return <section className="voicePanel"><h1>Verify your email to continue</h1><p>Use the email address on your application or interview invitation.</p>{signedIn?<><p>This account needs a verified email address. Verify it in your account settings or switch accounts.</p><UserButton/></>:<SignIn routing="hash" forceRedirectUrl={path} signUpForceRedirectUrl={path}/>}</section>;}

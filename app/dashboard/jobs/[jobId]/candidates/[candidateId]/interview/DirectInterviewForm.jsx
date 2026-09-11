@@ -1,0 +1,9 @@
+'use client';
+import {useState} from 'react';
+import {createDirectInterviewAction} from './actions';
+export default function DirectInterviewForm({job,candidate}) {
+ const[pending,setPending]=useState(false),[error,setError]=useState('');
+ const [values,setValues]=useState({title:job.title+' interview',type:'technical',startsAt:'',endsAt:'',meetingUrl:''});const field=name=>({value:values[name],onChange:e=>setValues(v=>({...v,[name]:e.target.value}))});
+ async function action(fd){setPending(true);setError('');try{for(const key of ['startsAt','endsAt']){const date=new Date(String(fd.get(key)));if(!Number.isFinite(date.getTime()))throw Error('Enter valid interview times.');fd.set(key,date.toISOString());}fd.set('timezone',Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC');await createDirectInterviewAction(fd);}catch(e){if(e?.digest?.startsWith('NEXT_REDIRECT'))throw e;setError('Could not create the invitation. Check your times, candidate consent and application status.');}finally{setPending(false);}}
+ return <form action={action}><input type="hidden" name="jobId" value={job.id}/><input type="hidden" name="candidateId" value={candidate.id}/><label>Interview title<input name="title" required {...field('title')}/></label><label>Type<select name="type" {...field('type')}>{['screening','technical','behavioral','case-study','final','other'].map(t=><option key={t}>{t}</option>)}</select></label><label>Starts<input name="startsAt" {...field('startsAt')} type="datetime-local" required/></label><label>Ends<input name="endsAt" {...field('endsAt')} type="datetime-local" required/></label><p>Times use your device’s timezone. The link expires seven days after the interview ends.</p><label>Meeting URL (optional)<input type="url" name="meetingUrl" {...field('meetingUrl')}/></label>{error&&<p role="alert">{error}</p>}<button className="primaryAction" disabled={pending}>{pending?'Creating…':'Create candidate link'}</button></form>;
+}

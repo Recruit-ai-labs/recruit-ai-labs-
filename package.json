@@ -1,0 +1,24 @@
+{
+  "name": "recruit-ai-landing",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --test tests/*.test.mjs",
+    "test:unit": "node --test tests/job-validation.test.mjs",
+    "test:integration": "node --test tests/job-pocketbase.integration.test.mjs",
+    "test:discovery": "node --test tests/discovery.test.mjs tests/discovery-actions.test.mjs",
+    "test:discovery:live": "node --env-file=.env.local tests/discovery.live.mjs"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.8.2",
+    "framer-motion": "^13.2.0",
+    "mammoth": "^1.12.2",
+    "next": "^16.3.4",
+    "pdf-parse": "^2.4.5",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  }
+}

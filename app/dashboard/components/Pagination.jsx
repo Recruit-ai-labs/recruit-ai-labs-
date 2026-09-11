@@ -1,0 +1,3 @@
+import Link from 'next/link';
+export function pageNumber(value){return Math.max(1,Math.min(100000,Number.parseInt(value,10)||1));}
+export default function Pagination({result,path,query={}}){const page=result.page||1,total=Math.max(1,result.totalPages||1);const href=p=>{const q=new URLSearchParams();for(const[k,v]of Object.entries(query))if(v&&k!=='page')q.set(k,String(v));q.set('page',String(p));return path+'?'+q;};return <nav className="moduleToolbar" aria-label="Pagination">{page>1&&<Link href={href(page-1)}>Previous</Link>}<span>Page {page} of {total} · {result.totalItems||0} records</span>{page<total&&<Link href={href(page+1)}>Next</Link>}</nav>;}

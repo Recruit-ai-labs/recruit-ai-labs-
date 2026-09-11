@@ -1,0 +1,14 @@
+.discoveryFunnel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.discoveryFunnel button{text-align:left;background:#fff;min-height:125px}
+.discoveryFunnel button[aria-pressed=true]{background:#2e4931;color:#fff;border-color:#2e4931}
+.discoveryFunnel b,.discoveryFunnel span,.discoveryFunnel small{display:block}
+.discoveryFunnel b{font-size:28px;margin-bottom:8px}
+.discoveryFunnel span{font-size:11px}
+.discoveryFunnel small{font-weight:400;line-height:1.5;margin-top:8px;opacity:.75}
+.discoveryDNA{margin-top:16px;padding:18px;border-radius:12px;background:#f6f8f2;border:1px solid #dce5d3}
+.discoveryDNA>div{display:flex;justify-content:space-between;text-transform:capitalize}
+.discoveryDNA>div small{font-size:10px;color:#758568}
+.discoveryDNA>article{padding:10px 0;border-top:1px solid #dfe6d7}
+.discoveryDNA>article p{margin:5px 0}
+.discoveryDNA a{font-size:11px}
+@media(max-width:760px){.discoveryFunnel{grid-template-columns:1fr}.discoveryFunnel button{min-height:0}}

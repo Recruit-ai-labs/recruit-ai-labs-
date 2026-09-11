@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { candidateEvidenceCorpus } from '../lib/match-evaluation.mjs';
+import { evaluateCandidateJob } from '../lib/nim-match.js';
+
+const job = { title: 'Senior Product Engineer', description: 'Build reliable recruiting products with TypeScript and PostgreSQL.', responsibilities: 'Own full-stack delivery, collaborate with product, and improve system reliability.', experience_min: 3, experience_max: 7, must_have_skills: ['TypeScript', 'PostgreSQL'], nice_to_have_skills: ['React'], knockout_criteria: ['Must have production software experience'] };
+const candidate = { first_name: 'Aarav', last_name: 'Sharma', current_title: 'Senior Product Engineer', current_company: 'Northstar Labs', location: 'Pune', total_experience: 5, skills: ['TypeScript', 'React', 'PostgreSQL'], summary: 'Builds recruiting products.' };
+const extraction = { source_sha256: 'a'.repeat(64), structured_data: { candidate: { current_title: 'Senior Product Engineer', current_company: 'Northstar Labs', total_experience_years: 5, summary: 'Builds recruiting products.' }, skills: [{ name: 'TypeScript', evidence: 'Skills: TypeScript, React, PostgreSQL' }, { name: 'React', evidence: 'Skills: TypeScript, React, PostgreSQL' }, { name: 'PostgreSQL', evidence: 'Skills: TypeScript, React, PostgreSQL' }], experience: [{ company: 'Northstar Labs', title: 'Senior Product Engineer', evidence: 'Built production recruiting systems used by 40 recruiters.', highlights: ['Built production recruiting systems used by 40 recruiters.'] }], education: [], certifications: [] } };
+const result = await evaluateCandidateJob({ job, candidate, extraction, evidenceCorpus: candidateEvidenceCorpus(candidate, extraction) });
+assert.equal(result.evaluation.must_have.length, 2); assert.equal(result.evaluation.nice_to_have.length, 1); assert.equal(result.evaluation.knockouts.length, 1);
+assert.ok(result.evaluation.must_have.some((item) => item.evidence)); assert.ok(Number.isInteger(result.evaluation.overall_score)); assert.ok(['strong-match', 'match', 'review', 'not-match'].includes(result.evaluation.recommendation));
+console.log(JSON.stringify({ ok: true, model: result.model, score: result.evaluation.overall_score, recommendation: result.evaluation.recommendation, confidence: result.evaluation.confidence }));

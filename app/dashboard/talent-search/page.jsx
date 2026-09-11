@@ -1,0 +1,1 @@
+import TalentSearch from './TalentSearch';export default function Page(){return <div className="productPage"><div className="pageHeading"><div><p className="pageEyebrow">TALENT CLOUD / SEMANTIC SEARCH</p><h1>Describe who you need.</h1><p>Natural-language ranking over consented workspace evidence. Every result explains why it appeared.</p></div></div><TalentSearch/></div>}

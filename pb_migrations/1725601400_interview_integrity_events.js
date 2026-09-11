@@ -1,0 +1,1 @@
+migrate((app)=>{const c=app.findCollectionByNameOrId('interviews');if(!c.fields.getByName('integrity_events'))c.fields.add(new JSONField({name:'integrity_events'}));app.save(c)},(app)=>{const c=app.findCollectionByNameOrId('interviews'),f=c.fields.getByName('integrity_events');if(f)c.fields.removeById(f.id);app.save(c)});

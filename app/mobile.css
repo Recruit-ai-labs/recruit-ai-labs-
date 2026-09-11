@@ -1,0 +1,133 @@
+/* Shared responsive rules. Keep page content visible rather than clipping overflow. */
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+.reportsSection, .reportsSection .reportPanel { min-width:0; max-width:100%; box-sizing:border-box; }
+.reportsSection .reportTableScroll { position:relative; min-width:0; max-width:100%; overflow-x:auto; overscroll-behavior-x:contain; }
+.reportsSection .reportTable button { min-height:44px; }
+img, video, canvas, svg { max-width: 100%; }
+input, select, textarea, button { box-sizing: border-box; }
+.appShell *, .candidateWelcome *, .voiceExperience * { box-sizing: border-box; }
+.appShell .appMain, .appShell .appContent, .appShell .productPage,
+.appShell .surfaceCard, .appShell .dataSurface { min-width: 0; }
+.appShell :where(h1,h2,h3,p,dd,li,blockquote,a,code),
+.candidateWelcome :where(h1,h2,p,small), .voiceExperience :where(h1,h2,p,a) { overflow-wrap: anywhere; }
+.appShell :where(input,select,textarea) { max-width: 100%; min-width: 0; }
+.candidateWelcome .welcomeFormCard select { width:100%; min-height:48px; margin-top:8px; padding:10px; border:1px solid #dbe3d5; border-radius:9px; background:#fff; color:#31482e; }
+
+@media (max-width: 1024px) {
+  .appShell, .appShell.sidebarCollapsed { --side: 280px; }
+  .appShell .appSidebar { width:min(280px,85vw); padding:16px; height:100dvh; overflow-y:auto; overscroll-behavior:contain; transform:translateX(-105%); visibility:hidden; pointer-events:none; }
+  .appShell .appSidebar.isOpen { transform:translateX(0); visibility:visible; pointer-events:auto; }
+  .appShell .appMain { width:100%; margin-left:0; }
+  .appShell .mobileNavButton { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px; flex-shrink:0; width:44px; height:44px; padding:10px; background:#fff; border:1px solid #ddd; border-radius:9px; }
+  .appShell .mobileNavButton span { width:19px; height:2px; background:#333; }
+  .appShell .sidebarScrim { display:block; position:fixed; inset:0; z-index:29; width:100%; height:100dvh; border:0; background:#0007; }
+  .appShell .sidebarCollapse { display:none; }
+  .appShell.sidebarCollapsed .workspacePicker div, .appShell.sidebarCollapsed .sidebarFoot div { display:flex; }
+  .appShell.sidebarCollapsed .appNav a span, .appShell.sidebarCollapsed .appNav>small { display:block; }
+  .appShell.sidebarCollapsed .appNav a { justify-content:flex-start; padding:0 11px; }
+  .appShell .appNav a { min-height:44px; font-size:14px; }
+  .appShell .appTopbar { height:auto; min-height:64px; padding:10px 16px; gap:10px; flex-wrap:wrap; }
+  .appShell .topbarQuick>span, .appShell .searchForm kbd { display:none; }
+  .appShell .searchForm { min-width:0; flex:1 1 160px; width:auto; max-width:360px; }
+  .appShell .topbarQuick a { min-height:44px; }
+  .appShell .appContent { padding:24px 20px 40px; }
+  .appShell :is(.dashboardGrid,.settingsGrid,.jobDetailGrid,.candidateDetailGrid,.analysisGrid,.matchGrid,.matchStartGrid) { grid-template-columns:minmax(0,1fr); }
+}
+
+@media (max-width: 760px) {
+  .appShell .appContent { padding:20px 14px max(28px,env(safe-area-inset-bottom)); }
+  .appShell .appTopbar { padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left)); }
+  .appShell .topbarQuick { display:none; }
+  .appShell .searchForm { display:flex; flex:1; max-width:none; min-height:44px; }
+  .appShell .searchForm input { display:block!important; width:100%; min-width:0; font-size:16px; }
+  .appShell .pageHeading { flex-direction:column; gap:16px; min-height:0; margin-bottom:20px; }
+  .appShell .pageHeading h1, .appShell .matchHeader h1 { font-size:30px; line-height:1.15; }
+  .appShell .pageHeading>div>p:last-child, .appShell .surfaceCard>p { font-size:14px; }
+  .appShell .surfaceCard { padding:18px; }
+  .appShell :is(.dashboardGrid,.settingsGrid,.analyticsGrid,.poolGrid,.reviewColumns,.candidateHeader,.candidateOverview,.analysisColumns,.contextEditorGrid,.jobFieldGrid,.interviewDateGrid,.publicNameGrid,.dnaColumns,.dnaSkills,.savedScoreGrid) { grid-template-columns:minmax(0,1fr); }
+  .appShell .metricGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .appShell .metricGrid article { padding:16px; min-height:110px; }
+  .appShell .metricGrid strong { font-size:28px; }
+  .appShell :is(.metricGrid small,.metricGrid span,.pageEyebrow,.settingsCard dt,.settingsCard dd,.settingsCard code) { font-size:12px; }
+  .appShell :is(.primaryAction,.secondaryAction,.draftButton,.aiGenerateButton),
+  .appShell :is(form button,form input:not([type=hidden]):not([type=checkbox]):not([type=radio]),form select) { min-height:44px; }
+  .appShell :is(form input,form select,form textarea) { font-size:16px!important; font-family:inherit!important; line-height:1.45; }
+  .appShell :is(form label,form button,.primaryAction,.secondaryAction,.draftButton) { font-size:14px!important; }
+  .appShell :is(form small,.formError,.fieldError,.analysisNotice) { font-size:12px!important; line-height:1.5; }
+  .appShell :is(input[type=checkbox],input[type=radio]) { flex-shrink:0; width:20px; height:20px; }
+  .appShell .moduleToolbar { height:auto; min-height:64px; padding:12px; flex-wrap:wrap; gap:10px; }
+  .appShell .moduleToolbar>div { flex:1 0 100%; }
+  .appShell .moduleToolbar .moduleSearch { display:flex!important; width:100%; min-width:0; flex:1 0 100%; min-height:44px; }
+  .appShell .moduleToolbar>select { display:block!important; flex:1 1 120px; min-width:0; }
+  .appShell .moduleToolbar>input { width:100%; }
+  .appShell .dataHeader { display:none; }
+  .appShell .dataRow, .appShell .dataRow.four, .appShell .dataRow.three, .appShell .dataRow.candidateColumns { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; padding:16px; font-size:14px; }
+  .appShell .dataRow :is(b,strong,small,mark) { font-size:13px; white-space:normal; overflow-wrap:anywhere; }
+  .appShell .dataRow form { display:flex; gap:10px; flex-wrap:wrap; min-width:0; }
+  .appShell .dataRow form select { flex:1; min-width:0; }
+  .appShell .dataRow>span, .appShell .dataRow>mark { display:block!important; }
+  .appShell .candidateIdentity { min-width:0; }
+  .appShell .candidateIdentity>div { min-width:0; }
+  .appShell .candidateIdentity small { overflow-wrap:anywhere; white-space:normal; }
+  .appShell :is(.jobFormShell,.candidateFormShell) { display:grid; grid-template-columns:minmax(0,1fr); }
+  .appShell :is(.jobFormSteps,.candidateFormAside) { padding:18px!important; }
+  .appShell :is(.jobFormSteps ol,.candidateFormAside ol) { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; padding:0; }
+  .appShell :is(.jobFormSteps li,.candidateFormAside li) { min-width:0; width:auto; font-size:12px; }
+  .appShell :is(.jobFormSteps li b,.candidateFormAside li b) { display:block; font-size:12px; }
+  .appShell :is(.jobFormSteps,.candidateFormAside)::after { display:none; }
+  .appShell :is(.jobFormSteps,.candidateFormAside)::before { display:none; }
+  .appShell .jobFormStage { animation:none!important; opacity:1; filter:none; }
+  .appShell :is(.jobFormMain,.candidateFormMain) { min-width:0; padding:20px 16px!important; }
+  .appShell .jobFormActions { position:static; width:auto; margin:20px 0 0!important; padding:12px 0!important; display:flex; flex-wrap:wrap; gap:12px; }
+  .appShell .jobFormActions>div { display:flex; flex:1 1 100%; flex-wrap:wrap; gap:10px; margin:0; }
+  .appShell .jobFormActions button { flex:1 1 auto; white-space:normal; padding:10px 14px; }
+  .appShell .profileAiCard, .appShell .contextHeading { flex-direction:column; align-items:stretch; }
+  .appShell .settingsCard dl>div { flex-direction:column; gap:5px; }
+  .appShell .settingsCard dd { text-align:left; }
+  .appShell .inviteCopy { display:flex; flex-wrap:wrap; gap:10px; }
+  .appShell .inviteCopy input { width:100%; flex:1 0 100%; }
+  .appShell :is(.candidateHeaderActions,.jobHeaderActions,.dnaEvaluate,.interviewMeta,.matchHeader) { display:flex; flex-wrap:wrap; gap:10px; }
+  .appShell .dnaMetrics { grid-template-columns:minmax(0,1fr); }
+  .appShell .dnaTabs { flex-wrap:wrap; }
+  .appShell .dnaTabs button { min-height:44px; padding:10px; }
+  .appShell :is(.scorecardShell fieldset,.ratingChoices,.scorecardEditor) { min-width:0; }
+  .appShell .ratingChoices { display:flex; flex-wrap:wrap; gap:8px; }
+  .appShell .ratingChoices label { min-width:44px; min-height:44px; }
+  .appShell .poolCreate form, .appShell .poolAdd form { display:flex; flex-wrap:wrap; gap:10px; }
+  .appShell .poolCreate input, .appShell .poolAdd select { width:100%; flex:1 0 100%; }
+  .appShell .emptyState { padding:32px 16px; min-height:250px; }
+  .appShell table { display:block; max-width:100%; overflow-x:auto; }
+  .voiceExperience { padding:16px max(12px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important; }
+  .voiceExperience .voiceWorkspace, .voiceExperience.voiceStep-interview .voiceWorkspace { display:flex; flex-direction:column; gap:16px; }
+  .voiceExperience .voiceStage { width:100%; min-width:0; min-height:0; }
+  .voiceExperience .voiceHost { min-height:0; padding:16px; }
+  .voiceExperience .voiceHostHalo { transform:scale(.7); margin:-20px auto; }
+  .voiceExperience .voiceSelf { max-width:180px; margin:12px auto; }
+  .voiceExperience .voiceSelf .voicePreview { width:100%; margin:0; }
+  .voiceExperience .voiceSelf .voicePreview>span { font-size:12px; line-height:1.4; padding:8px; }
+  .voiceExperience .voiceStageFooter { display:none; }
+  .voiceExperience .voicePanel, .voicePanel { width:100%; max-width:100%; min-width:0; padding:22px 16px!important; margin:16px auto; box-sizing:border-box; }
+  .voiceExperience .voicePanel h1 { font-size:26px!important; line-height:1.35; }
+  .voiceExperience .voiceControls { flex-wrap:wrap; }
+  .voiceExperience .voiceControls button, .voiceExperience .voiceControls form { width:100%; margin:0; }
+  .voiceExperience textarea { min-width:0; min-height:180px!important; font-size:16px!important; }
+  .voiceExperience button { min-height:44px!important; white-space:normal; }
+  .voiceExperience>header { gap:12px; flex-wrap:wrap; }
+  .candidateWelcome .welcomeFieldPair { grid-template-columns:minmax(0,1fr); }
+  .candidateWelcome .welcomeFormCard { padding:22px 16px; min-width:0; }
+  .candidateWelcome .welcomeFormCard :is(input,select,textarea) { font-size:16px!important; }
+  .candidateWelcome .welcomeBottom { flex-wrap:wrap; }
+  .authPage :is(input,select,textarea), .authPage .clerkInput { font-size:16px!important; }
+  .nav .mobileLandingNav { display:flex; position:absolute; left:12px; right:12px; top:calc(100% + 8px); padding:12px; flex-direction:column; gap:4px; border:1px solid #ddd; border-radius:14px; background:#fff; box-shadow:0 8px 25px #0002; }
+  .nav .mobileLandingNav a { display:block; padding:12px; min-height:44px; color:#171717; }
+  .nav .menu { display:block; width:44px; height:44px; border:1px solid #ddd; border-radius:9px; background:#fff; }
+}
+@media(max-width:380px) {
+  .appShell .metricGrid { grid-template-columns:minmax(0,1fr); }
+  .appShell .appContent { padding-inline:10px; }
+  .appShell .surfaceCard { padding:14px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .appShell *, .voiceExperience * { scroll-behavior:auto!important; transition:none!important; animation:none!important; }
+}
