@@ -46,6 +46,14 @@ The repository had substantial pre-existing tracked and untracked work at the st
 
 - Protected-zone checker passes after every commit.
 - Production build passes with Next.js 16.3.4.
-- Test result remains at the incoming baseline: 85 total, 79 pass, 6 fail for the same documented causes.
+- Before the Tech DNA follow-up, the result remained at the incoming baseline: 85 total, 79 pass, 6 fail for the same documented causes.
 - No lint command exists in `package.json`; no lint dependency or script was added.
 - No dependency, lockfile, active migration, database, provider, deployment, push, merge or PR operation was performed.
+
+## Follow-up: Tech DNA accuracy
+
+- `lib/interview-validation.mjs` — added deterministic evidence grounding, matching-question enforcement, exact skill naming, personal-action checks, negation/uncertainty handling, conservative recommendation calculation and an evidence-derived HR summary.
+- `lib/nim-interview.js` — tightened the provider prompt so transcript content stays untrusted and every output must use semantically relevant exact evidence.
+- `tests/interview-security.test.mjs` — added adversarial coverage for unrelated quotes, fabricated summaries, negation, learning-only mentions, wrong-question evidence, team-only exposure and keyword repetition.
+- `docs/APPROVED_PROTECTED_CHANGE.md` — records the founder's explicit scope override and protected-baseline advancement.
+- Expanded suite result: 89 total, 83 pass, 6 pre-existing failures for the same documented causes. Production build passes.
