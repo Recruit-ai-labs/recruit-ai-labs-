@@ -5,11 +5,13 @@ Evidence is limited to what is verifiable in this repository. Code presence does
 | Claim | Evidence in code (file/line or NONE) | Action |
 |---|---|---|
 | “AI recruitment that fills roles with your exact requirements” | Matching and evaluation modules exist, but outcome guarantee: NONE | Softened to “AI-assisted recruitment built around your role requirements.” |
+| Hero phrases “delivers results,” “finds the right talent,” and “hires while you sleep” | Outcome/unattended performance evidence: NONE | Replaced with workflow descriptions: supports review, organizes evidence, keeps teams informed. |
 | “Screen, interview and rank candidates while your team sleeps” | Screening/interview modules exist; unattended/outcome implication: NONE | Softened to “in one workflow.” |
 | “10K+ resumes screened” / “10,000+ resumes” | NONE | Removed. Founder to provide substantiation before reuse. |
 | “24/7 AI interviews” | Interview route exists at `app/interview/[token]/page.jsx`; availability/SLA: NONE | Changed to “On-demand AI interviews.” |
 | “JD-based transparent scoring” | `lib/match-evaluation.mjs`, `app/dashboard/jobs/[jobId]/candidates/[candidateId]/evaluation/page.jsx` | Softened to “JD-based scoring breakdowns.” |
 | Resume parsing, skill-gap flags and ranking | `lib/resume-text.js`, `lib/resume-review.mjs`, `lib/match-evaluation.mjs` | Retained as product description; no performance promise added. |
+| Resume parsing “in seconds” | Performance evidence: NONE | Removed the timing claim. |
 | Voice AI interviews with reviewable signals | `app/interview/[token]/VoiceInterview.jsx`, `app/dashboard/interviews/[interviewId]/candidate-response/page.jsx` | Softened to reviewable answers; no recording claim. |
 | Candidate discovery across “every source” | NONE; configured discovery routes exist under `app/api/discovery/` | Changed to “configured talent sources.” |
 | Funnel, bias and time-to-hire stats | Funnel/analytics code exists; bias-stat implementation: NONE | Removed “bias”; retained funnel/time reporting. |
@@ -29,4 +31,6 @@ Evidence is limited to what is verifiable in this repository. Code presence does
 | Candidate data isolated to workspace | Workspace filtering/authorization appears in `lib/workspace-page.js`, `lib/pocketbase.js`, and dashboard actions | Softened to “records are scoped to a workspace”; security review still required. |
 | Access, export and deletion controls | Deletion/data-rights routes exist; general export control: NONE | FAQ mentions only verifiable data-rights/erasure route and asks users to contact for details. |
 | Human-led hiring | Human review language exists in `app/privacy/page.jsx` and review UIs | Retained where used; final-decision language is included only in the draft consent module. |
+| “Hiring pipelines that run themselves” | Fully autonomous workflow evidence: NONE | Removed and replaced with review/accountability wording. |
+| Founder employment/credential timeline claims | Verifiable evidence in code: NONE | Removed from marketing UI; founder may restore only after supplying evidence and approving publication. |
 | “Illustrative candidate data” / sample reports | Labels in `app/components/DiscoveryTablet.jsx` and `app/ReportsPreview.jsx` | Retained. Existing sample content stays labeled illustrative. |
