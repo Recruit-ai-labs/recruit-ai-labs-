@@ -1,0 +1,25 @@
+DO NOT APPLY WITHOUT MANUAL REVIEW.
+DRAFT - NEEDS LEGAL REVIEW.
+
+Proposed protected integration (not applied):
+
+```diff
+diff --git a/app/interview/[token]/page.jsx b/app/interview/[token]/page.jsx
+--- a/app/interview/[token]/page.jsx
++++ b/app/interview/[token]/page.jsx
+@@
+ import VoiceInterview from './VoiceInterview';
++import InterviewConsentGate from '../../components/InterviewConsentGate';
++import {CONSENT_GATE_ENABLED} from '../../../config/interview-consent';
+@@
+- return <><section className="voicePanel">
++ return <InterviewConsentGate enabled={CONSENT_GATE_ENABLED}><section className="voicePanel">
+@@
+- </section><VoiceInterview token={token}
++ </section><VoiceInterview token={token}
+@@
+- /></>;
++ /></InterviewConsentGate>;
+```
+
+This UI-only sketch is deliberately incomplete: it must not be enabled until an approved server-side action records `candidate_id`, `consented_at`, `policy_version`, and `text_version` in the proposed new table. That action must revalidate the candidate session server-side and must not trust identifiers supplied by the browser. Adding that write crosses the protected interview/database boundary and therefore requires founder review.
