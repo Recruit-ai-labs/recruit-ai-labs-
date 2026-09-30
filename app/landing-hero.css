@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+body #top{overflow:clip;-webkit-font-smoothing:antialiased}
+
+/* Landing typography: an editorial display face, a polished UI sans, and a precise mono for metadata. */
+body #top{
+  --landing-body:'Plus Jakarta Sans',Inter,Arial,sans-serif;
+  --landing-display:'Instrument Serif',Iowan Old Style,Palatino,Georgia,serif;
+  --landing-mono:'DM Mono',ui-monospace,SFMono-Regular,monospace;
+  font-family:var(--landing-body);
+}
+body #top :is(.available,.discoveryEyebrow,.marqueeWrap p,footer nav b,.tag,.badge,.chips){font-family:var(--landing-mono)}
+body #top :is(.hero h1,.services h2,.about h2,.pricing h2,.faq h2,.articles h2,.discoveryCopy h2,footer h2){font-family:var(--landing-display);font-weight:400;letter-spacing:-.035em}
+body #top :is(.hero h1 em,.discoveryCopy h2 em,footer h2 em){font-family:var(--landing-display);font-style:italic}
+body #top :is(.hero .lede,.services>div>p,.aboutReveal,.pricing>p,.faqList p,.articleGrid p,.discoveryCopy>div p){font-family:var(--landing-body)}
+
+body #top .hero{min-height:740px;display:grid;align-items:center;padding:160px 24px 80px;background-image:linear-gradient(180deg,#10191f65,#10191f18 48%,#10191f8c),url('/recruit-ai-hero.webp')!important;background-size:cover!important;background-position:center!important;isolation:isolate}
+body #top .hero:before,body #top .hero:after{display:none}
+body #top .heroInner{width:100%;max-width:1120px;padding:0;position:relative;z-index:1}
+body #top .hero h1{font-size:clamp(46px,6.6vw,88px);line-height:1.12;letter-spacing:-.055em;font-weight:500;margin:28px auto;color:#fff;text-wrap:balance}
+body #top .hero h1>span{color:#f3f4ef}body #top .hero h1 em{font-family:'Instrument Serif',Georgia,serif;font-weight:400}
+body #top .heroTyped{min-height:1.3em;height:auto;overflow:visible}body #top .heroTyped span{color:#fff!important;font-weight:500;font-size:inherit;line-height:1.18}
+body #top .available{background:#ffffff0c;border:1px solid #ffffff35;color:#e8eee9;box-shadow:none;backdrop-filter:blur(12px);font-size:11px;letter-spacing:.025em;padding:11px 17px}
+body #top .available strong{font-weight:500}body #top .available b{width:6px;height:6px;box-shadow:0 0 0 4px #a7ecc218;background:#a7ecc2}
+body #top .hero .lede{max-width:600px;font-size:16px;line-height:1.85;color:#d1d9d8;margin:24px auto}body #top .hero .lede b{color:#f3f4ef;font-weight:500}
+body #top .heroBtns{gap:14px;margin:30px 0}body #top .heroBtns a{min-height:50px;padding:15px 25px;border-radius:9px;font-size:13px;transition:transform .2s,box-shadow .2s}
+body #top .heroBtns .gradientBtn{background:#edf2e9!important;color:#15251e!important;box-shadow:0 8px 26px #0002}body #top .heroBtns .gradientBtn em,body #top .heroBtns .gradientBtn small{display:none}
+body #top .heroBtns .outlineBtn{background:#ffffff08;border:1px solid #ffffff55;color:#fff;backdrop-filter:blur(8px)}body #top .heroBtns a:hover{transform:translateY(-3px);box-shadow:0 12px 30px #0003}
+body #top .chips{margin:36px 0 0;gap:24px}body #top .chips span{border:0;background:none;color:#c5cfcc;font-size:11px;padding:0}body #top .chips b{color:#fff;font-weight:600}
+body #top .nav{background:#f8faf4ed;border:1px solid #ffffffa6;box-shadow:0 8px 32px #00000012;backdrop-filter:blur(20px)}body #top .nav nav a{font-size:12px}body #top .nav nav a:hover{color:#167354}
+body #top .featurePreview{background-image:linear-gradient(180deg,#111a2030,#111a20db),var(--feature-image)!important;background-size:cover!important;background-position:center!important;border:1px solid #ffffff28;border-radius:24px;min-height:460px;padding:36px}
+body #top .featureSection .featureList button.selected{background:#ffffff0d!important;background-image:none!important;border-color:#ffffff4a}
+body #top .featurePreview .dots{display:none}body #top .featurePreview h3{font-size:34px;letter-spacing:-.04em;line-height:1.15}body #top .featurePreview>p:not(.tag){color:#e0e3e5}body #top .featurePreview .gradientBtn{background:#f1f4ee;color:#16261e;border-radius:9px}
+body #top .featureSection .featureList button.selected{background:#111!important;background-image:none!important;color:#fff!important}
+body #top .featureSection .featureList button.selected :is(b,small,i){color:inherit!important}
+body #top .featureSection .featureList button>i{display:grid;place-items:center;width:32px;height:32px;margin-left:auto;line-height:1;flex:0 0 32px}
+body #top .faqList button>i{display:grid;place-items:center;line-height:1;flex:0 0 28px}
+body #top .faq{padding-top:68px}
+@media(max-width:760px){body #top .faq{padding-top:48px}}
+body #top .evidenceScroll{padding:130px 24px;text-align:left;background:#0c1714!important}body #top .evidenceScroll>div{max-width:980px;margin:auto}
+body #top .evidenceScroll small{padding:0;border:0;margin:0 0 32px;color:#9ab5a7;font-size:10px;letter-spacing:.18em}
+body #top .evidenceScroll p{font-size:clamp(27px,3.7vw,49px);line-height:1.4;font-weight:500;letter-spacing:-.035em;max-width:none;margin:0}body #top .evidenceScroll p span{color:#f1f5ee;display:inline}body #top .evidenceCaption{display:block;margin-top:34px;color:#89a396;font-size:12px}
+body #top .discovery{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.25fr);gap:55px;padding:110px max(24px,calc((100vw - 1280px)/2));align-items:center;overflow:hidden;background:#eef2ec;color:#192d24}
+body #top .discoveryCopy h2{font-size:clamp(34px,3.6vw,50px);line-height:1.13;letter-spacing:-.045em}body #top .discoveryCopy>div p{line-height:1.8;color:#607067}body #top .discoveryCopy .lightButton{display:inline-flex;margin-top:18px;background:#173e2d;color:#fff;border-radius:9px}
+body #top .discoveryApp{position:relative;width:100%;min-width:0;margin:0;padding:28px 23px 22px;border:10px solid #17201f;border-radius:34px;background:#f9fbf8;box-shadow:0 0 0 1px #66716b,0 24px 65px #12291a30;transform-origin:center;color:#25382e;overflow:hidden}
+body #top .discoveryApp:before{content:'';position:absolute;top:7px;left:50%;width:5px;height:5px;border-radius:50%;background:#38453f}
+body #top .discoveryApp>header{display:flex;align-items:center;gap:12px;padding:0 0 18px;border-bottom:1px solid #e0e7df;background:none;color:#21392c}
+body #top .discoveryApp>header b{font-size:14px}body #top .discoveryApp>header span{margin-left:auto;font-size:10px;background:#eef2ec;padding:9px 12px;border-radius:7px;color:#7b867e}body #top .discoveryApp>header i{font-size:12px;font-style:normal}
+body #top .discoveryFilter{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:20px 0;padding:16px;border:1px solid #dde6db;background:#f0f5ed;border-radius:12px}
+body #top .discoveryFilter small{width:100%;font-size:8px;letter-spacing:.13em;color:#718570}body #top .discoveryFilter b{width:100%;font-size:15px;margin:3px 0 5px}body #top .discoveryFilter span{font-size:9px;padding:5px 8px;background:#fff;border:1px solid #dfe8da;border-radius:5px}
+body #top .resultCount{font-size:10px;color:#6a7c6d;display:flex;align-items:center;gap:5px;margin:18px 0}body #top .resultCount b{font-size:18px;color:#233b2d}body #top .resultCount small{margin-left:auto;font-size:8px}
+body #top .candidateRows article{display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:10px;padding:16px 0;background:none;border:0;border-bottom:1px solid #e2e9de;border-radius:0;color:#223b2d}
+body #top .candidateRows .avatar{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:#e6eee0;color:#4c6b45;font-size:10px}body #top .candidateRows article>div{min-width:0}body #top .candidateRows strong{font-size:11px;display:block}body #top .candidateRows strong em{font-size:9px;color:#518557}body #top .candidateRows small{display:block;font-size:9px;color:#7b897b;margin-top:5px;line-height:1.5}
+body #top .candidateRows article>span,body #top .candidateRows article>i{display:none}body #top .candidateRows mark{background:#e8f2e1;color:#426637;border:1px solid #d7e6ce;border-radius:8px;padding:7px 10px;font-size:16px;text-align:center}body #top .candidateRows mark small{font-size:7px;margin:0;color:#618354}
+body #top .discoveryFloat{position:static;width:auto;margin:18px 0 0;padding:14px 16px;border:1px solid #dbe6d6;border-radius:10px;box-shadow:none;background:#eef4e9;transform:none!important;color:#38522e}body #top .discoveryFloat small{font-size:8px;letter-spacing:.12em}body #top .discoveryFloat b{display:block;margin-top:6px;font-size:12px}body #top .discoveryFloat p{font-size:10px;margin:5px 0 0;color:#6c8062}
+
+
+
+
+
+
+
+
+body #top :is(a,button):focus-visible{outline:2px solid #81b296;outline-offset:4px}
+body #top .featureSection .featureList small{color:#b8b8b8}
+body #top .featureSection .featureList button.selected small{color:#d0d0d0}
+body #top :is(.services,.about,.pricing,.faq) h2>span{color:#666}
+@media(max-width:900px){body #top .discovery{grid-template-columns:1fr;gap:42px}body #top .discoveryCopy{max-width:620px}body #top .discoveryApp{max-width:680px;justify-self:center}}
+@media(max-width:700px){body #top .hero{min-height:650px;padding:145px 20px 65px}body #top .hero h1{font-size:clamp(36px,7.8vw,52px)}body #top .hero .lede{font-size:14px}body #top .chips{gap:12px}body #top .chips span{font-size:9px}body #top .heroBtns{flex-wrap:wrap}body #top .heroBtns a{font-size:12px;padding:14px 18px}body #top .featurePreview{padding:25px;min-height:420px}body #top .evidenceScroll{padding:85px 24px}body #top .discovery{padding:75px 20px}body #top .discoveryApp{border-width:7px;border-radius:25px;padding:24px 14px 16px}body #top .discoveryApp>header span{font-size:8px;padding:8px}body #top .resultCount small{font-size:7px}}
+body #top .hero h1 .heroTyped{min-height:1.3em;font-size:.86em;line-height:1.18}
+body #top .aboutReveal{min-width:0;min-height:820px}body #top .aboutReveal .aboutLead{display:block;max-width:100%;white-space:normal;overflow-wrap:anywhere}body #top .aboutReveal>p>span>span,body #top .aboutMilestone span>span,body #top .aboutReveal>em span>span{display:inline;color:#26342d}body #top .aboutReveal .aboutLead>span{font-weight:700;color:#101813}body #top .aboutMilestone{border-top:1px solid var(--line);padding:18px 0}body #top .aboutMilestone>p{border:0;padding:0;margin:0;font-size:14px}body #top .aboutMilestone>p+ p{margin-top:9px;font-size:13px;line-height:1.7}body #top .aboutMilestone .aboutCompany{color:#4b5750}body #top .aboutMilestone small{display:inline-block;margin-left:12px}body #top .aboutReveal>em span>span{font-family:'Instrument Serif',Georgia,serif;font-size:42px;font-style:italic}
+
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}body #top *{animation:none!important;transition:none!important}body #top .evidenceScroll p span{opacity:1!important}}
+
+/* One canonical hero video for every viewport. */
+body #top .hero{position:relative;overflow:hidden;background-image:url('/hero-stationery-v1.jpg')!important}
+body #top .heroVideo{display:block;position:absolute;inset:0;width:100%;height:100%;min-width:100%;min-height:100%;object-fit:cover;object-position:center;z-index:0;pointer-events:none}
+body #top .heroVideoShade{position:absolute;inset:0;z-index:1;background:rgba(0,0,0,.7);pointer-events:none}
+body #top .heroInner{z-index:2}

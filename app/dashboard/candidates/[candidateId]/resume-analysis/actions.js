@@ -30,7 +30,7 @@ export async function analyzeResumeAction(formData) {
   try {
     extraction = await createResumeExtraction({
       workspaceId: workspace.id, candidateId, clerkUserId: userId, filename: source.filename,
-      sha256: hashResume(source.bytes), model: process.env.NIM_LLM_MODEL || process.env.NIM_FAST_LLM_MODEL || 'unconfigured',
+      sha256: hashResume(source.bytes), model: process.env.OPENROUTER_MODEL || 'unconfigured',
     });
     const parsed = await extractResumeText(source.bytes, { filename: source.filename, contentType: source.contentType });
     const result = await extractStructuredResume(parsed.text);

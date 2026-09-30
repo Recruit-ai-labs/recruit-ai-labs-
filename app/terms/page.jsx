@@ -1,8 +1,8 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Terms of Service | RecruitAI',
-  description: 'Terms of Service governing the use of RecruitAI recruitment platform, AI screening assessments, candidate rights, and employer obligations under Indian law.',
+  title: 'Terms of Service | Recruit AI',
+  description: 'Terms of Service for the Recruit AI recruitment platform, AI-assisted assessments, candidate rights, and employer obligations under Indian law.',
 };
 
 export default function TermsOfServicePage() {
@@ -83,7 +83,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">5. Intellectual Property & Acceptable Use</h2>
             <p>
-              All proprietary AI models, prompt evaluations, scoring heuristics, and platform interfaces belong exclusively to Recruit AI Inc. Reverse engineering, malicious scraping, or injecting unauthorized prompt injections into AI evaluation models is strictly prohibited.
+              All proprietary AI models, prompt evaluations, scoring heuristics, and platform interfaces belong exclusively to Recruit AI. Reverse engineering, malicious scraping, or injecting unauthorized prompt injections into AI evaluation models is strictly prohibited.
             </p>
           </section>
 
@@ -91,6 +91,13 @@ export default function TermsOfServicePage() {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">6. Governing Law & Dispute Resolution</h2>
             <p>
               These Terms shall be governed by and construed in accordance with the substantive laws of the Republic of India. Any legal disputes arising out of the use of the platform shall be subject to the exclusive jurisdiction of the competent courts in Raipur, Chhattisgarh, India.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">7. Notices and data-rights contact</h2>
+            <p>
+              Legal, privacy and data-rights requests should be sent through the Data Rights Desk at <a className="underline" href="mailto:hello@recruitailabs.in">hello@recruitailabs.in</a>. We may verify identity and coordinate with the hiring organisation that controls a recruitment process. The current product is an MVP; any paid pilot, service level, fee, refund or customer-data processing terms must be recorded in a separate signed order form and data-processing addendum.
             </p>
           </section>
         </div>

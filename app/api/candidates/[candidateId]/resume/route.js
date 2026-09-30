@@ -1,10 +1,11 @@
-import { auth } from '@clerk/nextjs/server';
 import { getCandidateForWorkspace, getWorkspaceContext } from '../../../../../lib/recruit-data';
 import { pbRawRequest } from '../../../../../lib/pocketbase';
+import { approvedClerkIdentity } from '../../../../../lib/access';
 
 export async function GET(_request, { params }) {
-  const { userId } = await auth();
-  if (!userId) return new Response('Unauthorized', { status: 401 });
+  const identity = await approvedClerkIdentity();
+  if (!identity) return new Response('Forbidden', { status: 403 });
+  const { userId } = identity;
   const context = await getWorkspaceContext(userId);
   if (!context) return new Response('Forbidden', { status: 403 });
   const { candidateId } = await params;

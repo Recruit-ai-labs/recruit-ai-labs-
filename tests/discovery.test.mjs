@@ -72,7 +72,7 @@ test('queries search portfolios beyond GitHub and LinkedIn, and invalid briefs f
 });
 test('provider failures are reported per search channel instead of presented as no candidates exist', async () => {
   let count = 0;
-  const fetcher = async () => ++count === 2 ? new Response('', { status: 429 }) : reply({ organic: [{ title: 'Portfolio', link: 'https://example.org/work' }] });
+  const fetcher = async () => ++count === 2 ? new Response('', { status: 429 }) : reply({ organic: [{ title: 'React Portfolio', link: 'https://example.org/work' }] });
   const result = await discoverWebLeads(brief, null, { env, fetcher });
   assert.equal(result.complete, false); assert.equal(result.leads.length, 1); assert.match(result.searches[1].error, /quota/);
 });

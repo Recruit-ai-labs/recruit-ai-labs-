@@ -1,12 +1,14 @@
-import Link from 'next/link';
+import DiscoveryClient from './DiscoveryClient';
 import { requireWorkspace } from '../../../lib/workspace-page';
-import { canManageCandidates } from '../../../lib/recruit-data';
-import { discoveryCapabilities } from '../../../lib/discovery-provider.mjs';
-import DiscoveryWorkspace from './DiscoveryWorkspace';
+import { workspaceEntitlements } from '../../../lib/usage-entitlements';
 
-export const metadata = { title: 'Candidate discovery | Recruit AI' };
+export const metadata = {
+  title: 'Candidate Discovery | RecruitAI',
+  description: 'Discover public LinkedIn profiles with job-relevant Tech DNA hiring briefs.',
+};
+
 export default async function DiscoveryPage() {
-  const { membership } = await requireWorkspace();
-  if (!canManageCandidates(membership)) return <section className="surfaceCard settingsCard"><h1>Candidate discovery</h1><p>Discovery is available to workspace owners, admins and recruiters.</p><Link href="/dashboard/candidates">View candidates</Link></section>;
-  return <DiscoveryWorkspace capabilities={discoveryCapabilities()}/>;
+  const { workspace } = await requireWorkspace();
+  const entitlement = await workspaceEntitlements(workspace.id);
+  return <DiscoveryClient maxCandidates={entitlement.discoveryCandidates} />;
 }

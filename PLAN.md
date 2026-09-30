@@ -26,3 +26,11 @@ The core engine, interview flow, candidate discovery, scoring/prompts, LLM and s
 - `docs/proposed_patches/consent_gate.patch` (proposal only; protected integration is not applied)
 
 If inspection shows a requested change requires touching a protected path, it will be documented rather than implemented.
+# Interview evidence hardening (approved follow-up)
+
+- Replace the candidate email dropdown with a normal email input while retaining server-side verified-email ownership checks.
+- Use the founder-supplied visual as the Ava interview-stage background with a contrast overlay.
+- Generate a structured question set covering role experience, up to five must-have skills, personal contribution, trade-offs, failure/problem solving, judgement, and motivation.
+- Use deterministic evidence-gap follow-ups so adaptive interviewing does not create an additional provider charge.
+- Preserve transcript-first Tech DNA: no unsupported proficiency, personality, or hiring recommendation; keep the final decision with the recruiter.
+- Verify with focused security/runtime tests, the existing full-suite baseline, a production build, and the protected-zone guard.

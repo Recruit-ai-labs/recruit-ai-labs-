@@ -1,0 +1,95 @@
+/* Dashboard responsive finish layer. Loaded after the dashboard theme so the
+   mobile layout remains stable even when a feature module has its own CSS. */
+.appShell,.appShell .appMain,.appShell .appContent{min-width:0}
+.appShell .appContent{overflow-x:hidden}
+.appShell :is(.pageHeading,.cardHeading,.workspaceWelcome,.workspaceSectionHeading,.reviewSectionHeading){min-width:0}
+.appShell :is(.pageHeading h1,.cardHeading h2,.workspaceWelcome h1,.workspaceSectionHeading h2){overflow-wrap:anywhere}
+.appShell :is(.moduleToolbar,.pageHeading,.cardHeading,.workspaceSectionHeading){max-width:100%}
+
+@media(max-width:1024px){
+  .appShell .appContent{padding-inline:24px}
+  .appShell .pageHeading{gap:18px}
+  .appShell .dashboardGrid,.appShell .settingsGrid,.appShell .vettingLayout{grid-template-columns:minmax(0,1fr)}
+  .appShell .candidateProfileGrid,.appShell .crDecisionHero{grid-template-columns:minmax(0,1fr)}
+  .appShell .crDecisionFacts{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .appShell .crDecisionFacts>div{border-bottom:0;border-right:1px solid #ffffff1c}
+  .appShell .crDecisionFacts>div:last-child{border-right:0}
+}
+
+@media(max-width:760px){
+  .appShell .appContent{padding:22px 16px max(48px,env(safe-area-inset-bottom))}
+  .appShell .appTopbar{padding-inline:12px}
+  .appShell .pageHeading{align-items:stretch;gap:14px;margin-bottom:22px}
+  .appShell .pageHeading>div{min-width:0}
+  .appShell .pageHeading>div>p:last-child{font-size:12px}
+  .appShell .pageHeading .primaryAction,.appShell .pageHeading>a{width:100%;justify-content:center}
+  .appShell .metricGrid{grid-template-columns:repeat(2,minmax(0,1fr));margin-top:20px}
+  .appShell .metricGrid article{min-height:112px;padding:15px}
+  .appShell .metricGrid strong{margin:10px 0 6px;font-size:27px}
+  .appShell .moduleToolbar{height:auto;min-height:0;align-items:stretch;gap:9px;padding:12px;flex-wrap:wrap}
+  .appShell .moduleToolbar>div{width:100%;margin-right:0}
+  .appShell .moduleToolbar .moduleSearch{display:flex;order:3;width:100%;max-width:none;min-width:0}
+  .appShell .moduleToolbar :is(select,button){flex:1;min-width:0}
+  .appShell .surfaceCard{padding:18px;border-radius:14px}
+  .appShell .workspaceOverviewGrid,.appShell .workspaceAsideColumn,.appShell .workspaceMetricGrid{grid-template-columns:minmax(0,1fr)}
+  .appShell .workspaceWelcome{align-items:stretch}
+  .appShell .workspaceWelcomeActions{width:100%;display:grid;grid-template-columns:minmax(0,1fr)}
+  .appShell .workspaceButton{width:100%}
+  .appShell .workspaceBlock{padding:18px;border-radius:15px}
+  .appShell .workspacePipelineBody{grid-template-columns:minmax(0,1fr)}
+  .appShell .workspaceStages{grid-template-columns:minmax(0,1fr)}
+  .appShell .reviewMetrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .appShell .reviewMetrics article{padding:13px 10px}
+  .appShell .reviewMetrics span{font-size:10px;line-height:1.35}
+  .appShell .reviewMetrics strong{font-size:23px}
+  .appShell .vettingBoardShell{padding:17px}
+  .appShell .vettingBoardToolbar{align-items:stretch;flex-direction:column;gap:13px}
+  .appShell .vettingBoardFilters{display:grid;grid-template-columns:minmax(0,1fr);justify-content:stretch}
+  .appShell .vettingBoardFilters input{width:100%}
+  .appShell .vettingBoard{grid-template-columns:repeat(6,minmax(190px,1fr));margin-inline:-5px;padding-inline:5px}
+  .appShell .candidateHeaderActions,.appShell .crReportActions{width:100%;justify-content:stretch}
+  .appShell .candidateHeaderActions>*,.appShell .crReportActions>*{flex:1;min-width:0;justify-content:center}
+  .appShell .candidateNameLine{min-width:0}
+  .appShell .candidateNameLine h1{font-size:29px;overflow-wrap:anywhere}
+  .appShell .crSection{padding:18px}
+  .appShell .crSectionTitle{align-items:flex-start;flex-direction:column;gap:10px}
+  .appShell .crSectionTitle>p{text-align:left}
+  .appShell .crDecisionFacts{grid-template-columns:minmax(0,1fr)}
+  .appShell .crDecisionFacts>div{border-right:0;border-bottom:1px solid #ffffff1c}
+  .appShell .crDecisionFacts>div:last-child{border-bottom:0}
+  .appShell .dnaTabs{overflow-x:auto;white-space:nowrap}
+  .appShell .dnaTabs button{flex:0 0 auto}
+  .appShell .interviewDNA{padding:18px 0}
+  .appShell .interviewLinks li{grid-template-columns:minmax(0,1fr)}
+  .appShell .interviewLinks li>form{grid-column:1;grid-row:auto}
+  .appShell .onboardingPanel,.appShell .candidateFormShell{grid-template-columns:minmax(0,1fr);margin-inline:0}
+  .appShell .onboardingForm,.appShell .candidateFormMain{padding:24px 18px}
+  .appShell .formRow,.appShell .goalGrid{grid-template-columns:minmax(0,1fr)}
+  .appShell .dataSurface{overflow-x:auto}
+  .appShell .dataHeader{display:grid;min-width:620px}
+  .appShell .dataRow{min-width:620px;grid-template-columns:1.5fr 1fr 1fr .65fr}
+  .appShell .dataRow:hover{transform:none}
+  .appShell :is(.settingsCard form,.jobFormStage form){min-width:0}
+  .appShell :is(.jobFormActions,.candidateFormActions,.formActions){flex-wrap:wrap;gap:10px}
+  .appShell :is(.jobFormActions,.candidateFormActions,.formActions)>*{flex:1;min-width:140px}
+}
+
+@media(max-width:520px){
+  .appShell .appContent{padding-inline:12px}
+  .appShell .pageHeading h1{font-size:29px}
+  .appShell .metricGrid{gap:8px}
+  .appShell .metricGrid article{padding:13px 11px}
+  .appShell .metricGrid small{font-size:8px;letter-spacing:.04em}
+  .appShell .reviewMetrics{grid-template-columns:1fr}
+  .appShell .reviewMetrics article{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .appShell .reviewMetrics strong{margin:0}
+  .appShell .workspaceRoleRow{grid-template-columns:36px minmax(0,1fr) 16px}
+  .appShell .workspaceRoleRow .workspaceStatus{grid-column:2;justify-self:start}
+  .appShell .workspaceRoleRow>span:last-child{grid-column:3;grid-row:1}
+  .appShell .moduleToolbar :is(select,button){flex-basis:100%;width:100%}
+  .appShell .candidateHeaderActions>*{flex-basis:100%}
+  .appShell .onboardingAside{padding:22px 18px}
+  .appShell .onboardingForm,.appShell .candidateFormMain{padding-inline:15px}
+}
+
+@media(prefers-reduced-motion:reduce){.appShell *{scroll-behavior:auto!important;transition-duration:0s!important}}

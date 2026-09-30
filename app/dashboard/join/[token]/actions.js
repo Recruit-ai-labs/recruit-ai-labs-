@@ -5,8 +5,9 @@ import {revalidatePath} from 'next/cache';
 import {cookies} from 'next/headers';
 import {getWorkspaceContext} from '../../../../lib/recruit-data';
 import {listRecords,pbFilterValue,updateRecord} from '../../../../lib/pocketbase';
+import { requireApprovedAccount } from '../../../../lib/access';
 export async function acceptInviteAction(_previous,fd) {
- const {userId}=await auth();if(!userId)return {error:'Please sign in again.'};
+ const {userId}=await requireApprovedAccount();
  const token=String(fd.get('token')||'');if(!/^[a-f0-9]{32}$/.test(token))return {error:'Invalid invitation.'};
  const user=await currentUser();
  try{

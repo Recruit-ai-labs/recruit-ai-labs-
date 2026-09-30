@@ -5,3 +5,7 @@ node_modules/
 .pocketbase/
 pb_data/
 npm-debug.log*
+.discovery-tools/
+__pycache__/
+.aider*
+opencode.json

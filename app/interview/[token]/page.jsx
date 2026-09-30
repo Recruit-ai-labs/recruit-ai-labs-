@@ -1,17 +1,12 @@
-import {auth} from '@clerk/nextjs/server';
-import {candidateIdentity,candidateSession} from '../../../lib/candidate-session';
-import {submitCandidateInterviewAction,recordInterviewEvent,requestInterviewFollowup} from './actions';
-import CandidateSignIn from '../../components/CandidateSignIn';
-import VoiceInterview from './VoiceInterview';
-export default async function Page({params}) {
- const {token}=await params;const identity=await candidateIdentity();
- if(!identity){const {userId}=await auth();return <CandidateSignIn signedIn={Boolean(userId)} path={'/interview/'+token}/>;}
- const session=await candidateSession(token);
- if(!session)return <main className="voiceExperience"><section className="voicePanel"><h1>Interview unavailable</h1><p>This link is expired, closed, or belongs to a different email. Contact your hiring team or sign in with your invited account.</p></section></main>;
- const interview=session.interview;
- if(interview.status==='completed')return <main className="voiceExperience"><section className="voicePanel"><h1>Thank you. Your interview is submitted.</h1><p>Your answers have been saved for the hiring team.</p></section></main>;
- if(interview.status!=='scheduled')return <p>This interview is unavailable. Contact the hiring team.</p>;
- const questions=interview.candidate_questions||[];
- if(!questions.length)return <p>Questions are unavailable. Ask your hiring team to refresh the invitation.</p>;
- return <><section className="voicePanel"><h2>{interview.title}</h2>{interview.starts_at&&<p>Scheduled: {new Date(interview.starts_at).toLocaleString('en-IN',{timeZone:interview.timezone||'UTC'})} ({interview.timezone||'UTC'})</p>}{/^https?:\/\//i.test(interview.meeting_url||'')&&<a href={interview.meeting_url} target="_blank" rel="noopener noreferrer">Open meeting link</a>}</section><VoiceInterview token={token} title={interview.title} questions={questions} submit={submitCandidateInterviewAction} recordEvent={recordInterviewEvent} requestFollowup={requestInterviewFollowup}/></>;
+import { notFound } from 'next/navigation';
+import { getInterviewLink } from '../../../lib/tech-dna-store';
+import InterviewExperience from './InterviewExperience';
+import '../sireen.css';
+export const metadata = { title: 'Your interview with Sireen | Recruit AI', robots: { index: false, follow: false }, referrer: 'no-referrer' };
+export default async function InterviewPage({ params }) {
+  const { token } = await params;
+  let link;
+  try { link = await getInterviewLink(token); } catch { return <main className="sireenShell"><section className="dnaCard"><h1>Interview temporarily unavailable</h1><p>Please retry shortly. Contact your recruiter if the issue continues.</p></section></main>; }
+  if (!link) notFound();
+  return <InterviewExperience token={token} role={link.blueprint.role} mission={link.blueprint.mission}/>;
 }

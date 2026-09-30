@@ -18,15 +18,13 @@ test('dashboard scopes every query and counts the full pipeline beyond preview l
     return { items: [], totalItems: collection === 'applications' ? 120 : 34 };
   });
   const result = await read('workspace-one', new Date('2026-09-09T12:00:00Z'));
-  assert.equal(result.activeApplications, 600);
+  assert.equal(result.activeApplications, 480);
   assert.equal(result.jobs.totalItems, 34);
-  assert.equal(result.pipeline.length, 7);
+  assert.equal(result.pipeline.length, 6);
   assert(calls.every(call => call.filter.startsWith('workspace = "workspace-one" && (')));
   assert(calls.every(call => call.perPage <= 5));
   assert.match(calls.find(call => call.collection === 'jobs').filter, /status = "open"/);
   assert.match(calls.find(call => call.collection === 'candidates').filter, /status = "active"/);
-  const upcoming = calls.find(call => call.sort === 'starts_at');
-  assert.match(upcoming.filter, /status = "scheduled" && starts_at >= "2026-09-09 12:00:00.000Z"/);
   for (const call of calls.filter(call => call.collection === 'applications')) {
     assert.match(call.filter, /status != "withdrawn"/);
     if (!/stage = "(hired|rejected)"/.test(call.filter)) assert.match(call.filter, /status = "active"/);

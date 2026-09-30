@@ -22,7 +22,7 @@ export async function runMatchEvaluationAction(formData) {
   if (latest?.status === 'processing') { if (Date.now() - new Date(latest.created).getTime() < 10 * 60 * 1000) redirect(route(jobId, candidateId, 'already-processing')); await failCandidateJobEvaluation({ workspaceId: workspace.id, jobId, candidateId, evaluationId: latest.id, clerkUserId: userId, code: 'processing_timeout', message: 'The previous evaluation did not finish and can be retried.' }); }
   const evidenceCorpus = candidateEvidenceCorpus(candidate, extraction); let record;
   try {
-    record = await createCandidateJobEvaluation({ workspaceId: workspace.id, jobId, candidateId, applicationId: application.id, clerkUserId: userId, jobFingerprint: fingerprint(jobInput(job)), candidateFingerprint: fingerprint(candidateInput(candidate, extraction)), model: process.env.NIM_LLM_MODEL || process.env.NIM_FAST_LLM_MODEL || 'unconfigured' });
+    record = await createCandidateJobEvaluation({ workspaceId: workspace.id, jobId, candidateId, applicationId: application.id, clerkUserId: userId, jobFingerprint: fingerprint(jobInput(job)), candidateFingerprint: fingerprint(candidateInput(candidate, extraction)), model: process.env.OPENROUTER_MODEL || 'unconfigured' });
     const result = await evaluateCandidateJob({ job, candidate, extraction, evidenceCorpus });
     await completeCandidateJobEvaluation({ workspaceId: workspace.id, jobId, candidateId, evaluationId: record.id, clerkUserId: userId, evaluation: result.evaluation, model: result.model, usage: result.usage });
   } catch (error) {

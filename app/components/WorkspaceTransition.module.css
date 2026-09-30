@@ -1,0 +1,18 @@
+.screen{min-height:100dvh;display:grid;place-items:center;padding:24px;background:#fff;color:#24222a;font:16px/1.6 "Segoe UI",system-ui,sans-serif;box-sizing:border-box}
+.card{width:min(100%,460px);box-sizing:border-box;padding:40px;border:0;background:#fff;text-align:center}
+.brand{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px;font-size:12px;font-weight:750;letter-spacing:.08em}.brand span{font-size:10px;color:#57677c;border-left:1px solid #dfe6ef;padding-left:10px}
+.mark{display:grid;place-items:center;width:60px;height:60px;margin:30px auto 24px;background:#edf3fc;color:#315ea8;border-radius:18px;font-size:28px;font-weight:700}
+.spinner{width:24px;height:24px;border:3px solid #d2def1;border-top-color:#315ea8;border-radius:50%;animation:turn 1s linear infinite}
+.card h1{font:650 24px/1.3 Inter,"Segoe UI",system-ui,sans-serif;letter-spacing:-.03em;margin:0 0 12px;color:#17263b;overflow-wrap:anywhere}.card p{margin:0;color:#586b80;font-size:14px;line-height:1.7}
+.retry{margin-top:24px;min-height:44px;padding:12px 20px;border:1px solid #315ea8;border-radius:10px;background:#315ea8;color:#fff;font:600 14px/1.4 Inter,"Segoe UI",system-ui,sans-serif;cursor:pointer}.retry:hover{background:#244a88}.retry:focus-visible{outline:3px solid #87a9dd;outline-offset:4px}
+@keyframes turn{to{transform:rotate(360deg)}}
+@media(max-width:480px){.screen{padding:16px}.card{padding:28px 22px}.card h1{font-size:22px}}
+@media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+.brand{font-size:12px;font-weight:500;letter-spacing:0;color:#45414c}.brand span{font-size:11px;color:#99939e;border-color:#ece9f0;font-weight:400;letter-spacing:0}
+.mark{width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 30% 24%,#f9e9ff,#ce9cf0 28%,#a04ae0 65%,#e0b2f5);box-shadow:0 12px 30px #b15bd825;color:white}
+.spinner{height:22px;width:22px;border:1.5px solid #ffffff40;border-top-color:#fff}
+.card h1{font:400 27px/1.3 "Segoe UI",sans-serif;letter-spacing:-.8px;color:#25212b}.card p{color:#948b9c;font-size:12px}
+.retry{background:#242029;border:0;border-radius:8px;font-size:12px;font-weight:500}.retry:hover{background:#463651}
+
+/* Shared coffee accent for the workspace gate. */
+.brand span{color:#8b684b;border-color:#dfd0be}.mark{background:radial-gradient(circle at 30% 24%,#fff8ec,#d6b892 28%,#a8784f 65%,#ecd2ad);box-shadow:0 12px 30px #a8784f35}.spinner{border-top-color:#fff}

@@ -1,8 +1,9 @@
 'use server';
 
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { createWorkspaceForUser } from '../../../lib/recruit-data';
+import { requireApprovedAccount } from '../../../lib/access';
 
 const companySizes = new Set(['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+']);
 const hiringGoals = new Set(['build-team', 'hire-faster', 'improve-quality', 'organize-pipeline', 'agency-delivery']);
@@ -11,15 +12,17 @@ const jobFunctions = new Set(['founder-owner', 'talent-leader', 'recruiter', 'hi
 const value = (formData, key) => String(formData.get(key) || '').trim();
 
 export async function completeOnboarding(_previousState, formData) {
-  const { userId } = await auth();
-  if (!userId) return { error: 'Your session has expired. Please sign in again.' };
+  const { userId } = await requireApprovedAccount();
 
   const input = {
+    firstName: value(formData, 'firstName'), lastName: value(formData, 'lastName'), phone: value(formData, 'phone'),
     companyName: value(formData, 'companyName'), website: value(formData, 'website'),
     companySize: value(formData, 'companySize'), hiringGoal: value(formData, 'hiringGoal'),
     name: value(formData, 'name'), jobFunction: value(formData, 'jobFunction'),
   };
   const fieldErrors = {};
+  if (!input.firstName || !input.lastName || !/^\d{10}$/.test(input.phone)) fieldErrors.phone = 'Enter valid personal details and a 10-digit phone number.';
+  input.name = `${input.firstName} ${input.lastName}`.trim();
   if (input.companyName.length < 2 || input.companyName.length > 120) fieldErrors.companyName = 'Enter a company name between 2 and 120 characters.';
   if (!companySizes.has(input.companySize)) fieldErrors.companySize = 'Select your company size.';
   if (!hiringGoals.has(input.hiringGoal)) fieldErrors.hiringGoal = 'Select a primary hiring goal.';

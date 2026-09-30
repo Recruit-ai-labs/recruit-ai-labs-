@@ -6,6 +6,7 @@ import { attachCandidateToJob, canManageCandidates, createCandidateForWorkspace,
 import { canTransitionCandidateStatus, CANDIDATE_STATUSES, matchesResumeSignature, readCandidateForm, validateCandidate, validateResume } from '../../../lib/candidate-validation.mjs';
 import { requireWorkspace } from '../../../lib/workspace-page';
 import { deleteRecord } from '../../../lib/pocketbase';
+import { purgeCandidateInterviews } from '../../../lib/tech-dna-store';
 
 export async function deleteCandidateAction(_previous, formData) {
   const { workspace, membership } = await requireWorkspace();
@@ -15,7 +16,8 @@ export async function deleteCandidateAction(_previous, formData) {
   try {
     const candidate = await getCandidateForWorkspace(workspace.id, candidateId);
     if (!candidate) return { error: 'Candidate not found in this workspace.' };
-    // PocketBase cascades linked applications, interviews, scorecards and files.
+    // PocketBase cascades linked applications, evaluations and files.
+    await purgeCandidateInterviews(workspace.id, candidate.id);
     await deleteRecord('candidates', candidate.id);
   } catch (error) {
     console.error('Candidate deletion failed:', error?.message);
@@ -38,9 +40,12 @@ export async function createCandidateAction(_previous, formData) {
   const data = readCandidateForm(formData);
   const validation = validateCandidate(data);
   const resume = formData.get('resume');
-  const fileValidation = await validateResumeContent(resume);
+  const [fileValidation, job] = await Promise.all([
+    validateResumeContent(resume),
+    data.job_id ? getJobForWorkspace(workspace.id, data.job_id) : Promise.resolve(null),
+  ]);
   if (!fileValidation.valid) validation.errors.resume = fileValidation.error;
-  if (data.job_id && !(await getJobForWorkspace(workspace.id, data.job_id))) validation.errors.job_id = 'Select a job from this workspace.';
+  if (data.job_id && !job) validation.errors.job_id = 'Select a job from this workspace.';
   validation.valid = Object.keys(validation.errors).length === 0;
   if (!validation.valid) return { error: 'Check the highlighted candidate information.', fieldErrors: validation.errors };
   const duplicate = await findCandidateByEmail(workspace.id, data.email);

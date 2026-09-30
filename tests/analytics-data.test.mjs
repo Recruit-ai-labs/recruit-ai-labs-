@@ -18,10 +18,10 @@ test('analytics uses exact database totals with minimal payloads and workspace i
   });
   const result = await read('workspace-one');
   assert.equal(result.openRoles, 1000);
-  assert.equal(result.active, 5000);
-  assert.equal(result.total, 7000);
+  assert.equal(result.active, 4000);
+  assert.equal(result.total, 6000);
   assert.equal(result.hired, 1000);
-  assert.equal(result.conversion, 14);
+  assert.equal(result.conversion, 17);
   assert(calls.every(call => call.filter.startsWith('workspace = "workspace-one" && (')));
   assert(calls.every(call => call.perPage === 1 && call.fields === 'id' && !call.page));
   for (const call of calls.filter(call => call.filter.includes('stage ='))) {

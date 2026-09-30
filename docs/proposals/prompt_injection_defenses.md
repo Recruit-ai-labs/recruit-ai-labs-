@@ -8,7 +8,7 @@ Create a reviewed LLM boundary that labels candidate/JD text as untrusted data, 
 
 ## Files likely affected
 
-- Protected prompt/provider modules (`lib/nim-*.js`, `lib/adaptive-interview.js`, `lib/assessment-evaluation.js`, `lib/bulk-screening-ai.js`).
+- Protected prompt/provider modules (`lib/nim-*.js`, `lib/adaptive-interview.js`, `lib/assessment-evaluation.js`).
 - New shared schema/boundary module and adversarial tests; scoring rubrics only after explicit founder approval.
 
 ## Risks

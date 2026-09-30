@@ -98,22 +98,6 @@ input, select, textarea, button { box-sizing: border-box; }
   .appShell .poolCreate input, .appShell .poolAdd select { width:100%; flex:1 0 100%; }
   .appShell .emptyState { padding:32px 16px; min-height:250px; }
   .appShell table { display:block; max-width:100%; overflow-x:auto; }
-  .voiceExperience { padding:16px max(12px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important; }
-  .voiceExperience .voiceWorkspace, .voiceExperience.voiceStep-interview .voiceWorkspace { display:flex; flex-direction:column; gap:16px; }
-  .voiceExperience .voiceStage { width:100%; min-width:0; min-height:0; }
-  .voiceExperience .voiceHost { min-height:0; padding:16px; }
-  .voiceExperience .voiceHostHalo { transform:scale(.7); margin:-20px auto; }
-  .voiceExperience .voiceSelf { max-width:180px; margin:12px auto; }
-  .voiceExperience .voiceSelf .voicePreview { width:100%; margin:0; }
-  .voiceExperience .voiceSelf .voicePreview>span { font-size:12px; line-height:1.4; padding:8px; }
-  .voiceExperience .voiceStageFooter { display:none; }
-  .voiceExperience .voicePanel, .voicePanel { width:100%; max-width:100%; min-width:0; padding:22px 16px!important; margin:16px auto; box-sizing:border-box; }
-  .voiceExperience .voicePanel h1 { font-size:26px!important; line-height:1.35; }
-  .voiceExperience .voiceControls { flex-wrap:wrap; }
-  .voiceExperience .voiceControls button, .voiceExperience .voiceControls form { width:100%; margin:0; }
-  .voiceExperience textarea { min-width:0; min-height:180px!important; font-size:16px!important; }
-  .voiceExperience button { min-height:44px!important; white-space:normal; }
-  .voiceExperience>header { gap:12px; flex-wrap:wrap; }
   .candidateWelcome .welcomeFieldPair { grid-template-columns:minmax(0,1fr); }
   .candidateWelcome .welcomeFormCard { padding:22px 16px; min-width:0; }
   .candidateWelcome .welcomeFormCard :is(input,select,textarea) { font-size:16px!important; }

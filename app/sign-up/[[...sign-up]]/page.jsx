@@ -1,5 +1,8 @@
 import { SignUp } from '@clerk/nextjs';
 import AuthShell from '../../components/AuthShell';
+import { redirect } from 'next/navigation';
+
+export const metadata = { title: 'Create an account | Recruit AI', description: 'Create your Recruit AI hiring workspace.' };
 
 const appearance = {
   elements: {
@@ -13,5 +16,5 @@ const appearance = {
 };
 
 export default function SignUpPage() {
-  return <AuthShell type="sign-up"><SignUp fallbackRedirectUrl="/dashboard" appearance={appearance} /></AuthShell>;
+  redirect('/sign-in');
 }

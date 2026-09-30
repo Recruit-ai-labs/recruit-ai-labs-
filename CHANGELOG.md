@@ -57,3 +57,27 @@ The repository had substantial pre-existing tracked and untracked work at the st
 - `tests/interview-security.test.mjs` — added adversarial coverage for unrelated quotes, fabricated summaries, negation, learning-only mentions, wrong-question evidence, team-only exposure and keyword repetition.
 - `docs/APPROVED_PROTECTED_CHANGE.md` — records the founder's explicit scope override and protected-baseline advancement.
 - Expanded suite result: 89 total, 83 pass, 6 pre-existing failures for the same documented causes. Production build passes.
+
+## Hiring desk and evidence safeguards
+
+- Added `/dashboard/today`, `/dashboard/decision-room`, and `/dashboard/follow-ups` using workspace-scoped applications, interviews and activity history.
+- Added human-owned notes, reminder events, practical-exercise evidence, printable side-by-side review, and unsent follow-up drafts.
+- Reworked transcript display to extract candidate statements without fabricating competence, confidence or recommendations; added multilingual/negation adversarial tests.
+- Removed invented discovery fallback skills/experience and generated briefs from unverified public excerpts without additional LLM calls.
+- Fixed adaptive interview navigation to use the live question list and pause controls while follow-ups load.
+- `tests/hiring-desk.test.mjs`: 11 new offline tests; targeted evidence/discovery suite: 19/19 passing. Protected-zone checker passes.
+# Interview experience and evidence depth
+
+- `app/interview/apply/[token]/page.jsx`: changed the verified-email chooser to an editable email input; the existing server check still rejects emails not verified on the signed-in account.
+- `app/interview/[token]/voice.css`, `app/theme.css`: applied the supplied Ava background with a readability overlay.
+- `lib/interview-validation.mjs`, `lib/interview-runtime.js`: expanded new interview plans to cover role experience, up to five required skills, problem solving, judgement, and motivation.
+- `lib/adaptive-interview.js`: replaced per-answer provider calls with deterministic ownership, decision, and outcome probes to avoid extra AI-credit usage.
+- `lib/transcript-evidence.mjs`, `tests/interview-security.test.mjs`: kept evidence extraction compatible with the expanded skill questions and added coverage checks.
+# Candidate report repair
+
+- Added `lib/interview-report.mjs`: source-validated provisional ratings, attributed summary points, persistence-safe revalidation and registration URL validation.
+- Updated `lib/nim-interview.js`: request and preserve structured summary/assessment in the existing single evaluation call.
+- Updated candidate and interview-response pages; added CandidateTabs, CandidateReport, ReportButton and report.css for working panels, separate summary/ratings/transcript, saved human scorecards and responsive layout.
+- Updated candidate-response actions to reuse already generated reports for sequential Generate requests and refresh the candidate page after saving.
+- Updated public application form/actions and interview runtime to collect and save optional LinkedIn/portfolio links.
+- Added interview-report tests and a fixture-based browser report/tab test. Usage and limitations: `docs/CANDIDATE_REPORT.md`.

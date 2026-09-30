@@ -2,6 +2,7 @@ import JobForm from '../JobForm';
 import { requireWorkspace } from '../../../../lib/workspace-page';
 import { canManageJobs } from '../../../../lib/recruit-data';
 import { redirect } from 'next/navigation';
+export const maxDuration = 120;
 
 export default async function NewJobPage() {
   const { membership } = await requireWorkspace();

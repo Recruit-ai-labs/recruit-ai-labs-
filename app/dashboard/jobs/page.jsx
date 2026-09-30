@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Pagination,{pageNumber} from '../components/Pagination';
 import { canManageJobs, listJobsForWorkspace } from '../../../lib/recruit-data';
 import { requireWorkspace } from '../../../lib/workspace-page';
+import { workspaceEntitlements } from '../../../lib/usage-entitlements';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,11 +11,11 @@ export default async function JobsPage({ searchParams }) {
   const query = await searchParams;
   const search = String(query?.search || '').slice(0, 100);
   const status = String(query?.status || '');
-  const result = await listJobsForWorkspace(workspace.id, { search, status, page:pageNumber(query?.page) });
+  const [result, entitlement] = await Promise.all([listJobsForWorkspace(workspace.id, { search, status, page:pageNumber(query?.page) }), workspaceEntitlements(workspace.id)]);
   const canManage = canManageJobs(membership);
   return (
     <div className="productPage">
-      <div className="pageHeading"><div><p className="pageEyebrow">HIRING WORK</p><h1>Jobs</h1><p>Create role briefs and manage every hiring pipeline from one place.</p></div>{canManage && <Link className="primaryAction" href="/dashboard/jobs/new">Create job <span>+</span></Link>}</div>
+      <div className="pageHeading"><div><p className="pageEyebrow">HIRING WORK</p><h1>Jobs</h1><p>Create role briefs and manage every hiring pipeline from one place.</p></div>{canManage && (entitlement.plan === 'pro' || (result.totalItems || 0) < entitlement.jobSlots ? <Link className="primaryAction" href="/dashboard/jobs/new">Create job <span>+</span></Link> : <Link className="primaryAction" href="/dashboard/billing">Upgrade for unlimited JDs</Link>)}</div>
       <form className="moduleToolbar jobsToolbar"><div><strong>{result.totalItems || 0}</strong><span>total jobs</span></div><label className="moduleSearch"><span>&#9906;</span><input name="search" aria-label="Search jobs" placeholder="Search jobs" defaultValue={search} /></label><select name="status" aria-label="Filter by status" defaultValue={status}><option value="">All statuses</option><option value="draft">Draft</option><option value="open">Open</option><option value="paused">Paused</option><option value="closed">Closed</option><option value="archived">Archived</option></select><button type="submit">Apply</button>{(search || status) && <Link href="/dashboard/jobs">Clear</Link>}</form>
       <section className="dataSurface">
         <div className="dataHeader"><span>Role</span><span>Department</span><span>Location</span><span>Status</span></div>

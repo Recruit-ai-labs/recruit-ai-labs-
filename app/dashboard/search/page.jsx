@@ -9,7 +9,6 @@ export default async function SearchPage({ searchParams }) {
   const groups = [
     { collection: 'candidates', title: 'Candidates', fields: ['first_name','last_name','email','current_title','current_company'], label: r => `${r.first_name} ${r.last_name || ''}`, href: r => `/dashboard/candidates/${r.id}` },
     { collection: 'jobs', title: 'Jobs', fields: ['title','department','location'], label: r => r.title, href: r => `/dashboard/jobs/${r.id}` },
-    { collection: 'interviews', title: 'Interviews', fields: ['title'], label: r => r.title, href: r => `/dashboard/interviews/${r.id}/${r.candidate_answers?.length ? 'candidate-response' : 'scorecard'}` },
     { collection: 'talent_pools', title: 'Talent pools', fields: ['name','description'], label: r => r.name, href: r => `/dashboard/talent-pool/${r.id}` },
   ];
   const results = q ? await Promise.all(groups.map(group => listRecords(group.collection, { filter: `workspace = "${pbFilterValue(workspace.id)}" && (${group.fields.map(field => `${field} ~ "${pbFilterValue(q)}"`).join(' || ')})`, page, perPage: 20, sort: '-updated' }))) : [];

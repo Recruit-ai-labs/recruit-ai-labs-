@@ -2,6 +2,7 @@ import { requireWorkspace } from '../../../lib/workspace-page';
 import {getRecord,listAllRecords,pbFilterValue} from '../../../lib/pocketbase';
 import {WorkspaceForm,InviteForm,RevokeInvite,MemberForm,WorkspaceSwitcher} from './SettingsForms';
 import CopyLink from '../components/CopyLink';
+import AccountDeletionCard from './AccountDeletionCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export default async function SettingsPage() {
   return (
     <div className="productPage">
       <div className="pageHeading"><div><p className="pageEyebrow">ADMINISTRATION</p><h1>Workspace settings</h1><p>Manage workspace identity, access and connected systems.</p></div></div>
-      <div className="settingsGrid"><section className="surfaceCard settingsCard"><h2>Your workspaces</h2><WorkspaceSwitcher workspaces={workspaces} current={workspace.id}/></section>
+      <div className="settingsGrid"><AccountDeletionCard email={membership.email}/><section className="surfaceCard settingsCard"><h2>Your workspaces</h2><WorkspaceSwitcher workspaces={workspaces} current={workspace.id}/></section>
         <section className="surfaceCard settingsCard">
           <div><small>GENERAL</small><h2>Workspace profile</h2><p>Stored in PocketBase</p></div>
           <dl><div><dt>Name</dt><dd>{workspace.name}</dd></div><div><dt>Website</dt><dd>{workspace.website || 'Not provided'}</dd></div><div><dt>Company size</dt><dd>{workspace.company_size}</dd></div><div><dt>Workspace ID</dt><dd><code>{workspace.id}</code></dd></div></dl>

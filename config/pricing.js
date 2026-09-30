@@ -8,11 +8,11 @@ export const pricingPlans = [
     cadence: '',
     description: 'Discuss the hiring workflow and usage level that fits your team.', // TODO_PRICING
     features: [
-      'AI interview capacity based on agreed usage', // TODO_PRICING
+      'Application workflow based on agreed usage', // TODO_PRICING
       'Resume intelligence engine',
       'Match scoring and shortlisting',
       'Candidate discovery',
-      'Interview scheduling',
+      'Candidate outreach',
       'Funnel analytics',
     ],
     className: 'pro',
@@ -28,7 +28,7 @@ export const pricingPlans = [
     description: 'Tell us about one role and we will confirm scope, capacity and pricing.', // TODO_PRICING
     features: [
       'Screening workflow', // TODO_PRICING
-      'Interview scope confirmed before work begins', // TODO_PRICING
+      'Screening scope confirmed before work begins', // TODO_PRICING
       'Reviewable shortlist',
       'Timeline agreed for the role', // TODO_PRICING
     ],

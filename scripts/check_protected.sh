@@ -20,6 +20,7 @@ EXPECTED_DIFF_HASH="$(tr -d '\r\n' < "$DIFF_HASH_FILE")"
 
 set --
 while IFS= read -r path || [ -n "$path" ]; do
+  path="$(printf '%s' "$path" | tr -d '\r')"
   case "$path" in
     ''|'#'*) continue ;;
   esac

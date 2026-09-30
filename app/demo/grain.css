@@ -1,0 +1,2 @@
+.demoHero::after{z-index:0!important}.demoHero>*{position:relative;z-index:1}
+.demoHero>.available{display:none}.demoFormStatus.sent{display:flex;align-items:center;gap:8px;margin:15px 0 0;padding:10px 12px;border:1px solid #a7dfbc;border-radius:9px;background:#eefaf1;color:#176b39;font-size:11px;font-weight:650}.demoFormStatus.sent span{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#239456;color:#fff;font-size:11px}

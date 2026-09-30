@@ -1,4 +1,5 @@
 'use server';
+import { requireApprovedAccount } from '../../../lib/access';
 import {revalidatePath} from 'next/cache';
 import {cookies} from 'next/headers';
 import {auth} from '@clerk/nextjs/server';
@@ -52,7 +53,7 @@ export async function manageMemberAction(_previous,fd) {
  revalidatePath('/dashboard','layout');return {message:'Team access updated. Disabled members can no longer access this workspace.'};
 }
 export async function switchWorkspaceAction(_previous,fd) {
- const {userId}=await auth();if(!userId)return {error:'Sign in again.'};
+ const {userId}=await requireApprovedAccount();
  const workspace=String(fd.get('workspace')||'');
  const found=await listRecords('memberships',{filter:`clerk_user_id = "${pbFilterValue(userId)}" && workspace = "${pbFilterValue(workspace)}" && status = "active"`,perPage:1});
  if(!found.items?.length)return {error:'You do not have access to this workspace.'};

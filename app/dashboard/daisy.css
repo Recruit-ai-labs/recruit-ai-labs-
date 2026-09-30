@@ -1,0 +1,40 @@
+@import "tailwindcss/theme.css" layer(theme) prefix(dsy);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(dsy);
+@source "./**/*.{js,jsx}";
+
+@plugin "daisyui" {
+  themes: false;
+  prefix: "dsy-";
+  logs: false;
+}
+
+@plugin "daisyui/theme" {
+  name: "recruitlux";
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: oklch(99% 0.006 105);
+  --color-base-200: oklch(97% 0.008 110);
+  --color-base-300: oklch(92% 0.012 120);
+  --color-base-content: oklch(24% 0.025 150);
+  --color-primary: oklch(47% 0.105 158);
+  --color-primary-content: oklch(98% 0.01 150);
+  --color-secondary: oklch(72% 0.075 82);
+  --color-secondary-content: oklch(24% 0.025 80);
+  --color-accent: oklch(66% 0.08 165);
+  --color-accent-content: oklch(98% 0.01 150);
+  --color-neutral: oklch(25% 0.025 150);
+  --color-neutral-content: oklch(97% 0.008 130);
+  --color-info: oklch(67% 0.10 235);
+  --color-success: oklch(60% 0.12 152);
+  --color-warning: oklch(76% 0.12 82);
+  --color-error: oklch(58% 0.16 28);
+  --radius-selector: 0.7rem;
+  --radius-field: 0.7rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}

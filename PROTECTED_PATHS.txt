@@ -8,7 +8,6 @@ app/dashboard/jobs/[jobId]/candidates/[candidateId]/evaluation/
 app/dashboard/candidates/
 lib/adaptive-interview.js
 lib/assessment-evaluation.js
-lib/bulk-screening-ai.js
 lib/interview-runtime.js
 lib/interview-validation.mjs
 lib/match-evaluation.mjs
@@ -49,15 +48,6 @@ tests/discovery-linkedin.test.mjs
 tests/discovery-pocketbase.integration.mjs
 tests/discovery.test.mjs
 tests/discovery.live.mjs
-
-# LLM/provider boundaries and bulk AI screening
-app/api/bulk-screening/
-app/dashboard/bulk-screening/
-lib/bulk-screening.mjs
-tests/bulk-screening-browser.cjs
-tests/bulk-screening.live.mjs
-tests/bulk-screening.production.mjs
-tests/bulk-screening.test.mjs
 
 # Authentication and authorization
 app/api/access/

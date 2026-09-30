@@ -24,3 +24,16 @@
 - No approved breach-response runbook was found.
 - Consent-specific policy/text version storage is not integrated; only a disabled standalone draft and unexecuted proposed migration were added.
 - Retention/deletion automation, provider retry queues and outcome tracking require separate reviewed projects; proposals are under `docs/proposals/`.
+
+## Newly implemented hiring-desk review items
+
+- Decide whether public LinkedIn excerpt searches and any existing verified enrichment are acceptable for each workspace; no public excerpt is a verified candidate skill.
+- Review the extractive transcript wording and practical-exercise workflow with hiring/legal stakeholders before treating any result as a hiring signal.
+- Confirm the reminder timezone/ownership policy and whether the existing activities collection is the desired long-term audit store.
+# Candidate report follow-up
+
+- New report ratings and summary are provisional AI interpretations with exact transcript references. They require human-labelled accuracy evaluation before promising superiority to competitors or verified candidate ability.
+- Existing interviews need one explicit Generate AI assessment action to populate the new structured report; page reads do not invoke AI. No paid provider or shared database was contacted during this change.
+- Assessment generation reuses valid saved reports for sequential requests. Concurrent duplicate requests still need a transactional lock design; no schema or worker change was made.
+- Historical LinkedIn/portfolio values cannot be recovered from an application form that did not ask for them. Edit profile supports adding them; new applications collect them.
+- Protected hashes have not been advanced for this report change; the old guard baseline cannot certify the newly authorized interview changes as unchanged. The worktree already contains unrelated auth, lockfile and discovery changes that were preserved.

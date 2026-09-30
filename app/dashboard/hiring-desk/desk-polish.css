@@ -1,0 +1,100 @@
+/* Review desk hierarchy: navigation, filters, guidance and records each get a clear lane. */
+.hiringDesk{max-width:1180px;padding-bottom:40px}
+.hiringDesk>.deskHero{max-width:720px;margin:0 0 20px}
+.hiringDesk>.deskHero>small{display:block;color:#8a6a4b;font-size:10px;font-weight:700;letter-spacing:.12em}
+.hiringDesk>.deskHero h1{margin:7px 0 6px}
+.hiringDesk>.deskHero p{max-width:620px;margin:0;font-size:13px}
+.hiringDesk>nav.deskFilters[aria-label="Hiring desk"]{display:flex;align-items:center;gap:4px;margin:0 0 24px;padding:4px;width:max-content;max-width:100%;border:1px solid #e2d7c9;border-radius:12px;background:#f8f1e9}
+.hiringDesk>nav.deskFilters[aria-label="Hiring desk"] a{padding:8px 14px;border-radius:8px;color:#80654d;font-size:12px;text-decoration:none}
+.hiringDesk>nav.deskFilters[aria-label="Hiring desk"] a:hover{background:#fffaf3;color:#4d301f}
+.hiringDesk>nav.deskFilters[aria-label="Hiring desk"] a[aria-current="page"]{background:#7a593b;color:#fff8ed;box-shadow:0 5px 14px #76503324}
+.hiringDesk>form.deskFilters{display:flex;align-items:end;gap:18px;margin:0 0 10px;padding:14px 16px;border:1px solid #e4d9cb;border-radius:14px;background:#fffaf4}
+.hiringDesk>form.deskFilters label{font-size:11px;color:#6d5744}
+.hiringDesk>form.deskFilters label:first-child{min-width:190px}
+.hiringDesk>form.deskFilters label:nth-child(2){display:flex;align-items:center;gap:8px;min-height:38px;font-weight:500}
+.hiringDesk>form.deskFilters input[type="checkbox"]{width:15px;height:15px;accent-color:#7a593b}
+.hiringDesk>form.deskFilters select{min-height:38px;padding:8px 34px 8px 11px;border-color:#d9c9b7;background:#fff}
+.hiringDesk>form.deskFilters button{min-height:38px;margin-left:auto;padding:8px 15px;background:#7a593b;color:#fff8ed;border-radius:9px}
+.hiringDesk>.deskMuted{margin:0 0 14px;font-size:11px;color:#8a796a}
+.hiringDesk>.deskNotice{margin:0 0 22px;padding:13px 15px;border:1px solid #ead7ba;border-radius:11px;background:#fff8ec;color:#765d45;font-size:11px;line-height:1.6}
+.hiringDesk>.deskGrid{gap:14px}
+.hiringDesk>.deskGrid>.deskCard{padding:18px;border-color:#e4d9cb;border-radius:14px;box-shadow:0 8px 24px #7650330b}
+.hiringDesk>.deskGrid>.deskCard h2{margin:9px 0 3px;font-size:17px}
+.hiringDesk>.deskGrid>.deskCard h3{margin:0;color:#7c6a59;font-size:12px;font-weight:600}
+.hiringDesk>.deskGrid>.deskCard>p{margin:10px 0;color:#6d6a65;font-size:12px;line-height:1.55}
+.hiringDesk>.deskGrid>.deskCard>p a{color:#79583b;font-weight:700}
+.hiringDesk>.deskGrid>.deskCard>.deskPill{background:#f0e3d4;color:#79583b}
+@media(max-width:700px){
+  .hiringDesk>nav.deskFilters[aria-label="Hiring desk"]{width:100%;overflow:auto}
+  .hiringDesk>nav.deskFilters[aria-label="Hiring desk"] a{white-space:nowrap}
+  .hiringDesk>form.deskFilters{align-items:stretch;flex-direction:column;gap:11px}
+  .hiringDesk>form.deskFilters label:first-child{min-width:0}
+  .hiringDesk>form.deskFilters button{width:100%;margin-left:0}
+}
+
+/* Today is an action desk: summary first, work queue second, system detail last. */
+.todayDesk>.deskHero{max-width:780px;margin-bottom:18px}
+.todayDesk>.deskHero h1{max-width:650px;font-size:clamp(30px,4vw,48px);line-height:1.04;letter-spacing:-.035em}
+.todayDesk>.deskHero p{max-width:680px;font-size:14px;line-height:1.65}
+.todayBrief{display:grid;grid-template-columns:auto minmax(240px,1fr) auto;align-items:center;gap:18px;margin:0 0 16px;padding:20px 22px;border:1px solid #dfd0bd;border-radius:18px;background:linear-gradient(135deg,#fffaf4 0%,#f5e9dc 100%);box-shadow:0 14px 36px #5b38200c}
+.todayBriefMark{display:grid;width:50px;height:50px;place-items:center;border-radius:14px;background:#765238;color:#fff9f1;box-shadow:0 9px 20px #5b382026}
+.todayBriefMark svg,.todayTaskIcon svg,.todayEmpty svg{width:23px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.todayBrief>div:nth-child(2)>span,.todayQueueHead span,.todayGuide>span{color:#8a694a;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.todayBrief h2{margin:3px 0 4px;color:#432a1b;font-size:19px;letter-spacing:-.02em}
+.todayBrief p{margin:0;color:#77685b;font-size:12px}
+.todayBrief dl{display:flex;margin:0}
+.todayBrief dl div{min-width:84px;padding:2px 16px;border-left:1px solid #dfcfbd;text-align:center}
+.todayBrief dt{color:#8a796b;font-size:10px}
+.todayBrief dd{margin:4px 0 0;color:#4d301f;font-family:Georgia,serif;font-size:23px;font-weight:700}
+.todayDesk>form.deskFilters{margin-bottom:20px;background:#fcf8f3}
+.todayLayout{display:grid;grid-template-columns:minmax(0,1fr) 280px;align-items:start;gap:20px}
+.todayQueue{overflow:hidden;border:1px solid #e2d6c8;border-radius:18px;background:#fffdf9;box-shadow:0 12px 36px #53351e0a}
+.todayQueueHead{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px;border-bottom:1px solid #eee5da}
+.todayQueueHead h2{margin:3px 0 0;color:#432a1b;font-size:20px;letter-spacing:-.02em}
+.todayQueueHead>p{margin:0;padding:5px 10px;border-radius:999px;background:#efe3d5;color:#725136;font-size:11px;font-weight:700}
+.todayTask{display:grid;grid-template-columns:28px 44px minmax(0,1fr) auto;gap:14px;align-items:start;padding:22px;border-bottom:1px solid #eee5da;transition:background .18s ease}
+.todayTask:last-of-type{border-bottom:0}
+.todayTask:hover{background:#fffbf6}
+.todayTaskOrder{padding-top:11px;color:#b29c88;font-family:Georgia,serif;font-size:12px}
+.todayTaskIcon{display:grid;width:44px;height:44px;place-items:center;border-radius:12px;background:#f0e3d5;color:#765238}
+.todayTaskIcon.application{background:#ece8dc;color:#596049}
+.todayTaskBody{min-width:0}
+.todayTaskLabel{display:inline-block;margin-bottom:4px;color:#8a6648;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.todayTaskBody h3{margin:0;color:#3f291c;font-size:17px;letter-spacing:-.015em}
+.todayTaskRole{margin:3px 0 10px;color:#796d62;font-size:11px;font-weight:600}
+.todayTaskReason{margin:0 0 7px;color:#5f554c;font-size:12px;line-height:1.55}
+.todayTaskBody small{display:block;margin-top:3px;color:#948274;font-size:10px}
+.todayTaskActions{display:flex;min-width:164px;flex-direction:column;gap:7px;align-items:stretch}
+.todayPrimary,.todayTaskActions .deskTools>summary{display:flex;min-height:42px;align-items:center;justify-content:space-between;gap:14px;padding:9px 12px;border:1px solid #765238;border-radius:10px;font-size:11px;font-weight:750;text-decoration:none;cursor:pointer}
+.todayPrimary{background:#765238;color:#fffaf3}
+.todayPrimary:hover{background:#5c3d29;color:#fff}
+.todayTaskActions .deskTools{margin:0;padding:0;border:0;background:transparent}
+.todayTaskActions .deskTools>summary{background:#fff;color:#765238;list-style:none}
+.todayTaskActions .deskTools>summary:hover{background:#fff;border-color:#4d301f;color:#4d301f}
+.todayTaskActions .deskTools>summary::-webkit-details-marker{display:none}
+.todayTaskActions .deskTools[open]{min-width:280px;padding:10px;border:1px solid #e1d3c3;border-radius:12px;background:#fffaf4;box-shadow:0 12px 28px #53351e18}
+.todayTaskActions .deskTools[open]>summary{margin-bottom:10px}
+.todayGuide{position:sticky;top:18px;padding:22px;border:1px solid #e1d4c6;border-radius:18px;background:#f5eadf;color:#5d4938}
+.todayGuide h2{margin:5px 0 20px;color:#432a1b;font-family:Georgia,serif;font-size:24px;line-height:1.1}
+.todayGuide ol{margin:0;padding:0;list-style:none;counter-reset:steps}
+.todayGuide li{position:relative;margin:0;padding:0 0 18px 34px;counter-increment:steps}
+.todayGuide li:not(:last-child):before{content:"";position:absolute;top:23px;bottom:3px;left:11px;width:1px;background:#d8c4ae}
+.todayGuide li:after{content:counter(steps);position:absolute;top:-2px;left:0;display:grid;width:23px;height:23px;place-items:center;border:1px solid #cbb49c;border-radius:50%;background:#fffaf4;color:#77583d;font-size:10px;font-weight:800}
+.todayGuide li b{color:#513725;font-size:12px}
+.todayGuide li p{margin:3px 0 0;color:#806f60;font-size:11px;line-height:1.5}
+.todayGuideNote{margin:0 0 14px;padding:12px;border-left:3px solid #8c6848;background:#fff9f1;color:#6d5947;font-size:10px;line-height:1.55}
+.todayGuide details{border-top:1px solid #dfcdbb;padding-top:12px}
+.todayGuide summary{color:#654832;font-size:11px;font-weight:750;cursor:pointer}
+.todayGuide details p{margin:9px 0 0;color:#826f5f;font-size:10px;line-height:1.6}
+.todayEmpty{padding:48px 24px;text-align:center}
+.todayEmpty>span{display:grid;width:48px;height:48px;margin:0 auto 12px;place-items:center;border-radius:50%;background:#eee4d8;color:#765238}
+.todayEmpty h3{margin:0;color:#493121;font-size:17px}
+.todayEmpty p{max-width:380px;margin:7px auto 0;color:#827265;font-size:12px;line-height:1.55}
+.todayDesk>nav[aria-label="Queue pages"]{margin-top:18px}
+.todayDesk a:focus-visible,.todayDesk button:focus-visible,.todayDesk summary:focus-visible,.todayDesk select:focus-visible,.todayDesk input:focus-visible{outline:3px solid #c99e73;outline-offset:2px}
+@media(max-width:920px){
+  .todayBrief{grid-template-columns:auto 1fr}.todayBrief dl{grid-column:1/-1}.todayBrief dl div{flex:1}.todayLayout{grid-template-columns:1fr}.todayGuide{position:static}
+}
+@media(max-width:700px){
+  .todayBrief{padding:17px}.todayBriefMark{width:44px;height:44px}.todayBrief dl{overflow:auto}.todayBrief dl div{min-width:82px;padding:2px 10px}.todayTask{grid-template-columns:24px 40px minmax(0,1fr);padding:18px 15px;gap:10px}.todayTaskIcon{width:40px;height:40px}.todayTaskActions{grid-column:2/-1;width:100%;min-width:0;flex-direction:row}.todayTaskActions>*{flex:1}.todayTaskActions .deskTools[open]{min-width:0}.todayQueueHead{padding:18px 15px}
+}

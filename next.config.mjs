@@ -5,11 +5,6 @@ const nextConfig = {
   experimental: { serverActions: { bodySizeLimit: '4mb' } },
   outputFileTracingIncludes: {
     '/dashboard/discovery': ['./scripts/scout-extract.py'],
-    '/api/bulk-screening': [
-      './node_modules/@napi-rs/canvas*/**/*',
-      './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
-      './node_modules/pdf-parse/dist/worker/**/*',
-    ],
   },
   async headers() {
     return [{

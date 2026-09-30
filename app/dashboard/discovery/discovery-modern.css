@@ -1,0 +1,378 @@
+/* Modern Candidate Discovery - Premium Luxury Dark & Light styling */
+
+.discoveryRoot {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #f1f5f9;
+}
+
+/* Header & Breadcrumb */
+.discoveryBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (min-width: 768px) {
+  .discoveryBanner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.discoveryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.discoveryTitle {
+  font-size: clamp(26px, 3.5vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 8px 0 4px;
+  color: #ffffff;
+}
+
+.discoverySubtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Step Bar */
+.stepBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+}
+
+.stepBtn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stepBtn.active {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.stepBtn:not(.active):not(:disabled):hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stepBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stepArrow {
+  color: #334155;
+  font-size: 11px;
+}
+
+/* Luxury Glass Card */
+.glassPanel {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Step 1: JD Area */
+.samplePillRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.samplePill {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.samplePill:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #fff;
+}
+
+.jdTextarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.jdTextarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* Buttons */
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnSecondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+/* Tag Cloud */
+.tagsBox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px;
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  min-height: 58px;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.skillBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(99, 102, 241, 0.18);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #c7d2fe;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.skillRemoveBtn {
+  background: none;
+  border: none;
+  color: #a5b4fc;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0;
+  margin-left: 4px;
+  line-height: 1;
+}
+
+.skillRemoveBtn:hover {
+  color: #ffffff;
+}
+
+.inputField {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.inputField:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+/* Candidate Grid */
+.candidateGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .candidateGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.candidateCard {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.candidateCard:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 16px 40px rgba(99, 102, 241, 0.15);
+}
+
+.candidateAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.dnaBox {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.dnaHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+  margin-bottom: 8px;
+}
+
+.dnaText {
+  font-size: 12px;
+  line-height: 1.65;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+}
+
+.contactBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(2, 6, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.sourceBadgeLinkedIn {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(14, 116, 144, 0.2);
+  border: 1px solid rgba(14, 116, 144, 0.35);
+  color: #38bdf8;
+}
+
+.sourceBadgeGitHub {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f1f5f9;
+}
+

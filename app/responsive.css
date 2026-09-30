@@ -1,0 +1,181 @@
+/* Shared device rules, scoped so marketing and workspace styles cannot leak. */
+body :is(.authContent,.authCard,.appMain,.appContent,.discoveryPolished){min-width:0;box-sizing:border-box}
+body :is(.authCard,.discoveryPolished) :is(h1,h2,h3,h4,p,a,span){overflow-wrap:anywhere}
+body .appShell .topbarContext{min-width:0;max-width:240px}
+body .appShell .topbarContext :is(small,b){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body .discoveryPolished{width:100%;max-width:1280px}
+body .discoveryPolished::before{inset-inline:0}
+body .discoveryPolished .grid>*,body .discoveryPolished .flex>div{min-width:0}
+body .discoveryPolished input,body .discoveryPolished textarea{max-width:100%}
+body .discoveryPolished h4{flex-wrap:wrap}
+body .discoveryPolished .discoverySteps{max-width:100%}
+body #top :is(.featureGrid,.aboutGrid,.priceCards,.articleGrid,.discovery)>*{min-width:0}
+body #top :is(.heroBtns,.chips,.sectionHead){flex-wrap:wrap}
+body #top :is(section[id],footer){scroll-margin-top:100px}
+body .authPage .authContent{height:auto;min-height:100svh}
+body .authPage .authCard{width:100%;min-width:0;max-width:470px;justify-self:center}
+body .authPage .authNav{max-width:100%;box-sizing:border-box}
+body .dpdpConsentCard{box-sizing:border-box;max-width:calc(100vw - 24px);max-height:calc(100dvh - 24px);overflow:auto}
+
+@media(max-width:1100px){
+  body #top .nav{gap:12px;padding-inline:20px}
+  body #top .nav>nav:not(.mobileLandingNav){gap:16px}
+  body .appShell .appTopbar{gap:12px;padding-inline:18px}
+  body .appShell .topbarQuick a{padding-inline:10px}
+}
+@media(max-width:1024px){
+  body .appShell .appMain{width:100%;margin-left:0}
+  body .appShell .appSidebar{width:min(280px,85vw)!important;height:100dvh;padding-bottom:max(20px,env(safe-area-inset-bottom))!important}
+  body .appShell .appTopbar{flex-wrap:wrap}
+  body .appShell .searchForm{flex:1 1 180px;max-width:none}
+  body .appShell.sidebarCollapsed .appBrand span:last-child,body .appShell.sidebarCollapsed .navGroup>small,body .appShell.sidebarCollapsed .lockedNavItem span{display:block}
+  body .appShell.sidebarCollapsed .appNav a{justify-content:flex-start!important}
+  body .appShell .appContent{padding:28px 20px 40px}
+}
+@media(max-width:900px){
+  body:has(>main#top) .nav{left:12px;right:12px;width:auto;max-width:none;transform:none}
+  body:has(>main#top) .nav .signin{display:none!important}
+  body:has(>main#top) .nav>div>.darkButton{display:inline-flex!important}
+}
+@media(max-width:850px){
+  body .authPage:is(.authSignIn,.authSignUp,.authContact) .authContent{width:100%;max-width:540px;min-height:100svh;height:auto;padding:80px 20px 32px!important;display:flex;flex-direction:column;justify-content:center;gap:20px}
+  body .authPage .authStory{margin:0;max-width:100%;width:100%}
+  body .authPage .authCard{margin:0;max-width:100%;padding:24px!important}
+  body .authPage .authNav{z-index:5;top:16px;left:20px;right:20px;width:auto;padding:0}
+  body .authPage :is(input,select,textarea){font-size:16px!important;max-width:100%;min-width:0}
+  body .authPage button{min-height:44px}
+  body .authPage .authProviderPreview>div{gap:7px}
+  body .authPage .authProviderPreview button{min-width:0;font-size:11px}
+}
+@media(max-width:760px){
+  body #top .nav{left:12px;right:12px;width:auto;max-width:none;transform:none;padding:10px 12px;gap:8px}
+  body #top .nav>.logo{flex-shrink:0;font-size:17px;gap:6px}
+  body #top .nav>div{gap:8px;min-width:0}
+  body #top .nav>div>.darkButton{display:inline-flex!important}
+  body #top .nav .signin{display:none!important}
+  body #top .nav .mobileLandingNav{max-height:calc(100dvh - 100px);overflow:auto}
+  body #top .hero{min-height:unset;padding:140px 20px 70px}
+  body #top .hero h1{font-size:clamp(32px,8vw,52px);line-height:1.16}
+  body #top .hero h1 .heroTyped{white-space:normal;min-height:2.4em;align-items:flex-start;font-size:.86em}
+  body #top .heroBtns{display:grid;grid-template-columns:minmax(0,1fr);width:100%;max-width:380px;margin-inline:auto;gap:12px}
+  body #top .heroBtns a{min-height:48px;justify-content:center;white-space:normal}
+  body #top .chips{justify-content:center;gap:12px 18px;line-height:1.6}
+  body #top :is(.featureSection,.services,.about,.pricing,.faq,.articles,.reportsSection){padding-inline:20px}
+  body #top :is(.featureGrid,.aboutGrid,.priceCards,.articleGrid,.services,.faq,.steps){grid-template-columns:minmax(0,1fr)}
+  body #top .sectionHead{align-items:flex-start;gap:14px}
+  body #top .featureList button{min-height:64px}
+  body #top .aboutReveal{min-height:0}
+  body #top :is(.serviceList article,.featurePreview,.priceCards article){min-width:0}
+  body #top .faqList button{min-height:60px;grid-template-columns:24px minmax(0,1fr) 20px;gap:10px}
+  body #top footer{padding:44px 20px;gap:25px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  body #top footer>div{grid-column:1/-1}
+  body #top footer>strong{font-size:clamp(36px,14vw,90px);letter-spacing:-.04em;max-width:100%}
+  body .appShell .appTopbar{gap:8px;padding:10px 12px}
+  body .appShell .topbarContext{flex:1;max-width:calc(100% - 100px)}
+  body .appShell .searchForm{order:4;flex:1 0 100%;width:100%;height:44px!important}
+  body .appShell .searchForm input{font-size:16px!important}
+  body .appShell .appContent{padding:20px 14px max(36px,env(safe-area-inset-bottom))}
+  body .appShell :is(.calmHeroActions,.pageHeading,.cardHeading,.calmSectionHead){flex-wrap:wrap}
+  body .appShell :is(.calmGrid,.billingGrid,.analyticsGrid,.settingsGrid,.candidateDetailGrid,.jobDetailGrid){grid-template-columns:minmax(0,1fr)}
+  body .appShell :is(.calmHeroActions,.candidateHeaderActions,.jobHeaderActions)>a{min-height:44px;white-space:normal}
+  body .appShell .calmStats{grid-template-columns:1fr}
+  body .appShell .calmStats a{border-right:0;border-bottom:1px solid var(--app-line)}
+  body .appShell .calmStats a:last-child{border-bottom:0}
+  body .appShell :is(.calmKicker,.calmHero h1){overflow-wrap:anywhere}
+  body .appShell :is(.dataRow,.dataRow form,.dataRow>div){min-width:0}
+  body .appShell :is(.moduleToolbar,.pageHeading) :is(a,button){min-height:44px}
+  body .appShell .appNav a{min-height:44px!important}
+  body .discoveryPolished{padding:0!important}
+  body .discoveryPolished>.discoveryHeader{gap:20px}
+  body .discoveryPolished .discoverySteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;overflow:visible;gap:4px;padding:5px}
+  body .discoveryPolished .discoverySteps>span{display:none}
+  body .discoveryPolished .discoverySteps button{white-space:normal;min-height:48px;padding:7px 5px;line-height:1.4;font-size:11px}
+  body .discoveryPolished .flex.items-center.justify-between,body .discoveryPolished .flex.items-start.justify-between{flex-wrap:wrap;gap:12px}
+  body .discoveryPolished .grid{grid-template-columns:minmax(0,1fr)}
+  body .discoveryPolished .p-6{padding:18px}
+  body .discoveryPolished :is(button,a[target="_blank"]){min-height:44px;white-space:normal}
+  body .discoveryPolished :is(input,textarea,select){font-size:16px!important}
+  body .discoveryPolished .w-12{flex-shrink:0}
+  body .dpdpConsentCard{inset:auto 12px max(12px,env(safe-area-inset-bottom));width:auto;padding:18px}
+  body .dpdpConsentActions{flex-wrap:wrap}
+  body .dpdpConsentActions button{min-height:44px;flex:1 1 120px}
+}
+@media(max-width:380px){
+  body .authPage:is(.authSignIn,.authSignUp,.authContact) .authContent{padding-inline:12px!important}
+  body .authPage .authCard{padding:22px 16px!important}
+  body .authPage .authCard h2{font-size:23px!important}
+  body .authProviderPreview button{gap:4px;padding-inline:4px}
+  body .appShell .appContent{padding-inline:10px}
+}
+@media(max-height:520px) and (max-width:1024px){
+  body .authPage:is(.authSignIn,.authSignUp,.authContact) .authContent{justify-content:flex-start;padding-top:70px!important}
+  body .appShell .appTopbar{position:relative}
+}
+
+/* Final responsive pass for auth and trust-centre pages. */
+@media(max-width:850px){
+  body .authPage{min-height:100svh;overflow-x:hidden}
+  body .authPage .authContent{width:min(100%,560px);padding:76px 18px 34px!important;gap:18px}
+  body .authPage .authStory{display:block;text-align:center;margin-bottom:0}
+  body .authPage .authSceneBrand{justify-content:center}
+  body .authPage .authStory :is(.authKicker,.authEvidence),body .authPage .authStory>p,body .authPage .authStory>h1{display:none}
+  body .authPage .authCard{border-radius:20px;padding:24px 20px!important;box-shadow:0 18px 48px #00000024}
+  body .authPage .authCard h2{font-size:clamp(24px,7vw,30px);line-height:1.1}
+  body .authPage .authSub{font-size:13px;line-height:1.6}
+  body .authPage .authForm{margin-top:20px;padding-top:20px}
+  body .authContact .authNav{padding:15px 18px}
+  body .authContact .authContent{padding-top:72px!important}
+  body .accessRequestForm{gap:13px}
+  body .accessRequestForm label{font-size:11px}
+  body .accessRequestForm :is(input,textarea){font-size:16px!important}
+  body .accessRequestForm textarea{min-height:104px}
+  body .accessRequestButton{min-height:48px}
+}
+
+@media(max-width:760px){
+  body .legalLanding{overflow-x:hidden}
+  body .legalLanding .legalSimpleNav{top:10px;left:10px;right:10px;width:auto;min-height:50px;padding:7px 9px;border-radius:18px}
+  body .legalLanding .legalSimpleNav nav{gap:6px;font-size:11px}
+  body .legalLanding .legalSimpleNav nav .legalNavButton{padding:8px 10px}
+  body .legalLanding .legalSimpleNav + .legalHero{padding-top:76px!important}
+  body .legalLanding .legalHero{min-height:500px}
+  body .legalLanding .legalHeroInner{width:calc(100% - 36px);padding:62px 0 52px}
+  body .legalLanding .legalHero h1{font-size:clamp(41px,12vw,58px);line-height:1;letter-spacing:-.07em}
+  body .legalLanding .legalHero p{max-width:100%;font-size:14px;line-height:1.7}
+  body .legalLanding .legalHeroActions{display:grid;grid-template-columns:1fr;width:100%;gap:9px}
+  body .legalLanding .legalHeroActions a{justify-content:space-between;min-height:47px;padding:13px 15px}
+  body .legalLanding .legalDocWide{width:100%;padding:36px 18px 60px!important}
+  body .legalLanding .legalMeta{display:grid;gap:7px;margin-bottom:24px;font-size:9px;line-height:1.5}
+  body .legalLanding .legalLead{font-size:16px;line-height:1.7;margin-bottom:30px}
+  body .legalLanding .legalNoticeGrid,.legalLanding .rightsGrid{grid-template-columns:1fr;gap:9px;margin-bottom:42px}
+  body .legalLanding .legalNoticeGrid>div,.legalLanding .rightsGrid>section{padding:17px}
+  body .legalLanding .legalSections>section{grid-template-columns:34px minmax(0,1fr);gap:12px;padding:25px 0}
+  body .legalLanding .legalSections h2{font-size:21px;line-height:1.2}
+  body .legalLanding .legalSections p,.legalLanding .legalCallout p,.legalLanding .legalTwoCol p{font-size:13px;line-height:1.75}
+  body .legalLanding .legalCallout{margin:38px 0;padding:22px 18px;border-radius:17px}
+  body .legalLanding .legalCallout h2{font-size:25px;line-height:1.15}
+  body .legalLanding .requestPanel{grid-template-columns:1fr;gap:26px;padding:24px 18px;border-radius:18px}
+  body .legalLanding .requestPanel h2{font-size:34px;line-height:1.05}
+  body .legalLanding .requestChecklist{border:0;border-top:1px solid #ffffff2c;padding:20px 0 0}
+  body .legalLanding .legalTwoCol{grid-template-columns:1fr;gap:0;padding:38px 0}
+  body .legalLanding .legalTwoCol>div{padding:20px 0;border-bottom:1px solid #ddd}
+  body .legalLanding .legalTwoCol>div:last-child{border-bottom:0}
+  body .legalLanding .legalFooter{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 18px;padding:25px 18px;font-size:11px}
+  body .legalLandingTerms>article{width:100%;padding:36px 18px 56px!important}
+  body .legalLandingTerms>article h1{font-size:clamp(29px,8vw,40px);line-height:1.1}
+  body .legalLandingTerms>article section h2{font-size:20px;line-height:1.25}
+  body .legalLandingTerms>article p{font-size:14px;line-height:1.75}
+  body .legalLandingTerms>header>div{padding-inline:12px}
+}
+
+@media(max-width:420px){
+  body .authPage .authContent{padding-inline:12px!important}
+  body .authPage .authCard{padding:21px 16px!important}
+  body .authPage .authCard h2{font-size:23px}
+  body .authPage .authNav{padding-inline:12px}
+  body .legalLanding .legalSimpleNav .legalBrand{font-size:14px!important}
+  body .legalLanding .legalSimpleNav .legalBrandMark{width:28px;height:28px;flex-basis:28px}
+  body .legalLanding .legalSimpleNav .legalBrandMark img{width:23px;height:23px}
+  body .legalLanding .legalHeroInner{width:calc(100% - 28px)}
+  body .legalLanding .legalHero h1{font-size:40px}
+}
