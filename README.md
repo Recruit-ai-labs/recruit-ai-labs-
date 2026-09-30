@@ -17,9 +17,10 @@ It brings sourcing, job intake, candidate review, structured evaluation, outreac
 ## Product preview
 
 <p align="center">
-  <a href="./public/WhatsApp%20Video%202026-09-23%20at%2012.24.06.original.mp4">
-    <img src="./public/recruit-ai-hero.webp" alt="Recruit AI product preview" width="900" />
-  </a>
+  <video controls width="900" preload="metadata">
+    <source src="./public/WhatsApp%20Video%202026-09-23%20at%2012.24.06.original.mp4" type="video/mp4" />
+    Your browser does not support embedded video.
+  </video>
 </p>
 
 **[▶ Watch the product walkthrough](./public/WhatsApp%20Video%202026-09-23%20at%2012.24.06.original.mp4)**
