@@ -17,13 +17,11 @@ It brings sourcing, job intake, candidate review, structured evaluation, outreac
 ## Product preview
 
 <p align="center">
-  <video controls width="900" preload="metadata">
+  <video autoplay loop muted playsinline controls width="900" preload="metadata">
     <source src="./public/WhatsApp%20Video%202026-09-23%20at%2012.24.06.original.mp4" type="video/mp4" />
     Your browser does not support embedded video.
   </video>
 </p>
-
-**[▶ Watch the product walkthrough](./public/WhatsApp%20Video%202026-09-23%20at%2012.24.06.original.mp4)**
 
 ## Why Recruit AI?
 
