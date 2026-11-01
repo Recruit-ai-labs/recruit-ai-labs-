@@ -1,0 +1,6824 @@
+// ------------------------------------------------------------------
+//  The job seeker workspace.
+//
+//  Structure follows the reference workspace at D:\New folder: a sticky
+//  bar with icon-and-label destinations, a three-column home (profile
+//  rail, feed, context rail), white cards on a grey canvas, and a drawer
+//  on small screens.
+//
+//  The skin is monochrome by decision: the same LinkedIn-like geometry,
+//  spacing and density, with ink (#171714) doing the work an accent
+//  colour would do elsewhere. No serif, no mono, no hairlines-only cards
+//  — this is a workspace, not an editorial page.
+//
+//  Scoped as a CSS module, so nothing here can reach the marketing pages.
+// ------------------------------------------------------------------
+
+$ink: #171714;
+$ink-soft: #2c2c28;
+$muted: #61636b;
+$faint: #8a8c93;
+$line: #e4e5e7;
+$line-soft: #eff0f1;
+$canvas: #f4f5f6;
+$hover: #f2f2ef;
+$shell: 1280px;
+
+// Every card in the workspace is the same object: white, one hairline,
+// ten-pixel corners. Declared once so a new card cannot drift.
+@mixin surface($padding: 18px) {
+  padding: $padding;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+@mixin shell-pad {
+  padding-inline: clamp(16px, 3vw, 32px);
+}
+
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid $ink;
+    outline-offset: 2px;
+  }
+}
+
+// The pill every primary-ish control uses — ghost buttons, composer.
+@mixin pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 16px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink;
+  text-decoration: none;
+  white-space: nowrap;
+
+  @include focus-ring;
+}
+
+// ------------------------------------------------------------------
+//  Root
+// ------------------------------------------------------------------
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  background: $canvas;
+  color: $ink;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+// Off-canvas until it is focused, then a real, readable control.
+.skip {
+  position: fixed;
+  top: -100px;
+  left: 16px;
+  z-index: 200;
+  padding: 12px 16px;
+  border: 1px solid $ink;
+  border-radius: 8px;
+  background: #ffffff;
+  color: $ink;
+  font-size: 13px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+
+  &:focus-visible {
+    top: 10px;
+    outline: 2px solid $ink;
+    outline-offset: 2px;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Header
+//  One rule, no shadow. Destinations are icon over label, and the current
+//  one is ink with a two-pixel underline sitting on the header's border.
+// ------------------------------------------------------------------
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  border-bottom: 1px solid $line;
+  background: #ffffff;
+
+  // Installed as a standalone app, the page begins at the physical top of
+  // the screen — behind the notch. This keeps the bar below it. In a normal
+  // browser tab the inset is zero, so nothing moves.
+  padding-top: env(safe-area-inset-top);
+}
+
+.headerInner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 58px;
+  max-width: $shell;
+  margin: 0 auto;
+
+  @include shell-pad;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+}
+
+.brandRoman,
+.brandAI {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.brandAI {
+  font-style: italic;
+  color: $ink-soft;
+}
+
+.brandTm {
+  align-self: flex-start;
+  margin-top: 1px;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: $faint;
+}
+
+// The one line of orientation in the bar. It steps out of the way before
+// the destinations need the space.
+.workspaceLabel {
+  margin-left: 6px;
+  padding-left: 14px;
+  border-left: 1px solid $line;
+  font-size: 12px;
+  color: $faint;
+  white-space: nowrap;
+
+  @media (max-width: 1120px) {
+    display: none;
+  }
+}
+
+.nav {
+  display: flex;
+  align-self: stretch;
+  margin-left: auto;
+
+  @media (max-width: 860px) {
+    display: none;
+  }
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 78px;
+  padding: 6px 10px 4px;
+  color: $muted;
+  text-decoration: none;
+  transition: color 0.16s ease;
+
+  @include focus-ring;
+
+  // The underline lives in the tab's own box and starts at the bottom
+  // edge, which is also the header's border.
+  &::after {
+    content: "";
+    position: absolute;
+    right: 10px;
+    bottom: -1px;
+    left: 10px;
+    height: 2px;
+    background: $ink;
+    transform: scaleX(0);
+    transform-origin: 50% 50%;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.navItemActive {
+  color: $ink;
+
+  &::after {
+    transform: scaleX(1);
+  }
+}
+
+.navIcon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+// The tab's own answer to a click. While the route it points at is being
+// prepared the icon breathes — full, a third, full — which is the pulse the
+// skeletons already speak, so the bar and the page read as one gesture.
+// Opacity only: nothing in the row can shift mid-click, and the label stays
+// legible while the icon does the talking (YouTube's loading rows, not a
+// chord spinner).
+.tabIconLoading {
+  animation: tab-icon-breathe 1.05s ease-in-out infinite;
+}
+
+@keyframes tab-icon-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.32;
+  }
+}
+
+.navLabel {
+  font-size: 11.5px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.navItemActive .navLabel {
+  font-weight: 600;
+}
+
+// ------------------------------------------------------------------
+//  Me
+// ------------------------------------------------------------------
+.me {
+  position: relative;
+  flex-shrink: 0;
+
+  @media (max-width: 860px) {
+    display: none;
+  }
+}
+
+.meButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 70px;
+  min-height: 46px;
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: $muted;
+  cursor: pointer;
+  transition: color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.meLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
+
+.chevron {
+  font-size: 8px;
+  line-height: 1;
+  transition: transform 0.18s ease;
+}
+
+.meButton[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+// ------------------------------------------------------------------
+//  Avatars
+// ------------------------------------------------------------------
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #ececea;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: $ink-soft;
+}
+
+// A photograph fills the disc; the disc's own radius does the cropping, so
+// nothing here needs to know how large the avatar is.
+.avatarImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarLarge {
+  width: 40px;
+  height: 40px;
+  font-size: 13px;
+}
+
+.avatarHero {
+  width: 112px;
+  height: 112px;
+  font-size: 32px;
+  font-weight: 600;
+  background: #e9e9e6;
+}
+
+// ------------------------------------------------------------------
+//  Account menu
+// ------------------------------------------------------------------
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 70;
+  width: 280px;
+  padding: 8px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow:
+    0 12px 32px -18px rgba(23, 23, 20, 0.4),
+    0 2px 8px -6px rgba(23, 23, 20, 0.14);
+  animation: menu-in 0.16s ease both;
+}
+
+.dropdownPerson {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding: 8px 8px 12px;
+  border-bottom: 1px solid $line-soft;
+}
+
+.dropdownIdentity {
+  min-width: 0;
+}
+
+.dropdownName {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.dropdownMail {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: $faint;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: $ink;
+  text-decoration: none;
+  transition: background-color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.menuValue {
+  font-size: 11px;
+  color: $faint;
+}
+
+.menuSignOut {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  margin-top: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-top: 1px solid $line-soft;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: $ink;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Small-screen trigger
+// ------------------------------------------------------------------
+.mobileToggle {
+  display: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  @media (max-width: 860px) {
+    display: grid;
+  }
+}
+
+// Two rules rather than an icon: nothing to download. The button only ever
+// opens the drawer, so there is no close state to morph into.
+.bars {
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 10px;
+
+  i {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1.5px;
+    border-radius: 2px;
+    background: $ink;
+  }
+
+  i:first-child {
+    top: 0;
+  }
+
+  i:last-child {
+    bottom: 0;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Drawer
+//  Portalled to the body so the sticky header can never clip it, and
+//  stacked under the navigation rule (9999) but over every piece of page
+//  chrome.
+// ------------------------------------------------------------------
+.drawerLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawerBackdrop {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(10, 10, 12, 0.44);
+  cursor: pointer;
+  animation: fade-in 0.18s ease both;
+}
+
+.drawer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(320px, 86vw);
+  height: 100%;
+  padding: 14px 16px 20px;
+  background: #ffffff;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: drawer-in 0.26s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid $line-soft;
+}
+
+.drawerClose {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: #ffffff;
+  font-size: 14px;
+  line-height: 1;
+  color: $ink;
+  cursor: pointer;
+
+  @include focus-ring;
+}
+
+.drawerNav {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  margin-top: 10px;
+}
+
+.drawerLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: $ink;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+// The current destination is said twice: an ink background and weight.
+// No extra word, so the row stays quiet.
+.drawerLinkActive {
+  background: $hover;
+  font-weight: 600;
+
+  .drawerIcon {
+    color: $ink;
+  }
+}
+
+.drawerIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: $muted;
+}
+
+.drawerNumeral {
+  margin-left: auto;
+  font-size: 11px;
+  color: $faint;
+}
+
+.drawerPerson {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding: 16px 4px;
+  border-top: 1px solid $line-soft;
+}
+
+.drawerSignOut {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.drawerFoot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 16px;
+  font-size: 11.5px;
+
+  a {
+    color: $muted;
+    text-decoration: none;
+
+    &:hover {
+      color: $ink;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+// ------------------------------------------------------------------
+//  Page canvas
+// ------------------------------------------------------------------
+.main {
+  flex: 1;
+  width: 100%;
+
+  // On a phone the bar floats over the page, so the last card must stop
+  // above it. The inset keeps that clearance even under a home indicator.
+  @media (max-width: 860px) {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
+
+// ------------------------------------------------------------------
+//  The mobile bar.
+//
+//  LinkedIn's most-used control on a phone is the one at the thumb, not the
+//  one at the top of the screen. The full navigation lives there already for
+//  a keyboard; this is the same set of destinations drawn for a hand, with
+//  compose raised out of the middle. It appears only below the width where
+//  the top destinations already fit, so the two never compete.
+// ------------------------------------------------------------------
+.tabBar {
+  display: none;
+
+  @media (max-width: 860px) {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 55;
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid $line;
+    background: #ffffff;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+.tabBarLink {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 0 6px;
+  color: $muted;
+  text-decoration: none;
+  transition: color 0.16s ease;
+
+  @include focus-ring;
+}
+
+.tabBarLinkActive {
+  color: $ink;
+
+  .tabBarIcon {
+    stroke-width: 2.2;
+  }
+}
+
+.tabBarIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.tabBarLabel {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.tabBarPost {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  text-decoration: none;
+
+  @include focus-ring;
+}
+
+// The disc is lifted out of the rule so it reads as the one action on the
+// bar rather than as a fifth destination.
+.tabBarPostIcon {
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border-radius: 999px;
+  background: $ink;
+  box-shadow: 0 6px 16px rgba(23, 23, 20, 0.28);
+  transform: translateY(-8px);
+}
+
+// While a destination is being prepared the page that was there steps out
+// of the way — it is never left standing behind the skeleton — so the
+// middle of the workspace becomes the shape of what is coming, at the shape
+// it will take. Only its paint is withheld; the tree stays mounted, which is
+// why going back to a page costs nothing.
+.pageSlot[data-loading="true"] {
+  display: none;
+}
+
+// Home: profile rail, feed, context rail.
+.layout {
+  display: grid;
+  grid-template-columns: 225px minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+  max-width: $shell;
+  margin: 0 auto;
+  padding: 20px 0 56px;
+
+  @include shell-pad;
+
+  > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 1120px) {
+    grid-template-columns: 210px minmax(0, 1fr);
+
+    .railRight {
+      display: none;
+    }
+  }
+
+  // Stacked, every child must fill the column. `align-items: start` from
+  // the grid above would size each one to its max-content width on a flex
+  // axis, which is how a phone ended up with a 440px feed inside a 375px
+  // screen and a page that scrolled sideways.
+  //
+  // The order is the handset's own, and it is the opposite of the desk's:
+  // the feed comes first and the profile rail follows it. Someone opening
+  // the workspace on a phone came for what was said, not for their own
+  // cover photo — so the card that introduces them sits one scroll down,
+  // which is where LinkedIn keeps it too.
+  @media (max-width: 820px) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-top: 12px;
+    padding-bottom: 40px;
+
+    .mainColumn {
+      order: 1;
+    }
+
+    .railLeft {
+      order: 2;
+    }
+  }
+
+  // Ten pixels of gutter rather than sixteen: at 390px that is a whole
+  // character of the post body on every line.
+  @media (max-width: 560px) {
+    padding-inline: 10px;
+  }
+}
+
+// Profile: one column of sections, one rail of facts.
+.layoutProfile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 0 56px;
+
+  @include shell-pad;
+
+  > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 900px) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding-top: 14px;
+  }
+}
+
+// Settings: a short index beside the sections it points at.
+.layoutSettings {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 0 56px;
+
+  @include shell-pad;
+
+  > * {
+    min-width: 0;
+  }
+
+  @media (max-width: 820px) {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding-top: 14px;
+  }
+}
+
+.railLeft,
+.railRight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+
+  @media (min-width: 1121px) {
+    position: sticky;
+    top: 74px;
+  }
+
+  @media (max-width: 820px) {
+    gap: 12px;
+  }
+}
+
+// A grid whose columns are left implicit gets one `auto` column, and an
+// `auto` column never shrinks below the widest item's min-content. That is
+// how a phone ended up scrolling sideways: the composer's prompt is one
+// unbreakable line, its min-content is ~420px, and the column took the page
+// with it. Pinning the column to `minmax(0, 1fr)` hands the width decision
+// back to the viewport, so the item is what clips — with the ellipsis it was
+// already written to have — instead of the screen. Every single-column stack
+// below carries the same declaration for the same reason.
+.mainColumn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+// ------------------------------------------------------------------
+//  Profile card (left rail) and profile hero
+// ------------------------------------------------------------------
+.profileCard {
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.cover {
+  position: relative;
+  height: 56px;
+  overflow: hidden;
+  background: linear-gradient(120deg, #2c2c28 0%, #171714 62%, #3a3a34 100%);
+}
+
+// A single repeating dot grid, kept very quiet — enough that the cover
+// reads as a surface rather than a flat block of ink.
+.coverPattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.22;
+  background-image: radial-gradient(#ffffff 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+// An uploaded cover fills the band; the pattern stays behind it for the
+// people who have not added one.
+.coverImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// One grid for the whole card body, so every element keeps the same
+// vertical rhythm. The negative row gap is what lifts the avatar into
+// the cover — see .profileCardAvatar for why it still paints on top.
+.profileCardBody {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 46px 16px 16px;
+  text-align: center;
+}
+
+// The rail's own avatar: sized to sit in a 225px card without touching
+// either edge. It overlaps the cover, which is positioned, so it must be
+// positioned too — otherwise the cover paints over the top of the disc.
+// The pull equals the body's top padding plus one grid gap, so the disc
+// straddles the cover edge and the name keeps a full gap below it.
+.profileCardAvatar {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  margin-top: -56px;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 1px $line;
+  font-size: 25px;
+  font-weight: 600;
+  background: #e9e9e6;
+}
+
+.profileName {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.profileHeadline {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: $muted;
+}
+
+.profileMeta {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: $faint;
+}
+
+.strengthRow {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid $line-soft;
+  font-size: 12.5px;
+  color: $muted;
+}
+
+.strengthValue {
+  font-weight: 600;
+  color: $ink;
+}
+
+.strengthBar {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #eceded;
+  overflow: hidden;
+}
+
+.strengthFill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+  border-radius: 999px;
+  background: $ink;
+  transform-origin: 0 50%;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.viewRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $ink;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover span {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Shortcuts (left rail)
+// ------------------------------------------------------------------
+.shortcuts {
+  padding: 8px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.shortcutRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: $ink;
+  text-decoration: none;
+  transition: background-color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.shortcutIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: $muted;
+}
+
+.shortcutGo {
+  margin-left: auto;
+  font-size: 11px;
+  color: $faint;
+}
+
+// Three rows on a desk, three tiles on a handset: the same destinations
+// in a sixth of the height, which is what matters once the rail sits
+// under the feed instead of beside it.
+@media (max-width: 820px) {
+  .shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2px;
+    padding: 6px;
+  }
+
+  .shortcutRow {
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-height: 62px;
+    padding: 8px 4px;
+    font-size: 11px;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .shortcutIcon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .shortcutGo {
+    display: none;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Composer — the row that opens the sheet
+//
+//  One field, drawn like the input it becomes: a rounded rectangle holding
+//  a single line of invitation, a quiet pencil in a disc at the far end
+//  saying what a click will do, and a rule under it holding three
+//  shortcuts. The field is 54px tall, which is the height of the control
+//  it stands in for — the pill it replaced was 48px with two lines and 7px
+//  of padding, which is why it read as a squeeze.
+// ------------------------------------------------------------------
+.composer {
+  @include surface(14px 16px 8px);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.composerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.composerPrompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  min-height: 54px;
+  padding: 8px 8px 8px 18px;
+  border: 1px solid $line;
+  border-radius: 12px;
+  background: #ffffff;
+  font-family: inherit;
+  text-align: left;
+  cursor: text;
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease,
+    box-shadow 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover {
+    border-color: #c9c9c4;
+    background: #fbfbfa;
+  }
+
+  &:hover .composerPromptGo {
+    background: #e8e8e3;
+    color: $ink;
+  }
+}
+
+.composerPromptBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+// One line, one weight. The prompt used to be a bold title over a quiet
+// hint; two sizes in a 54px field read as a heading with a caption. Light,
+// once, and the copy does the inviting.
+.composerPromptText {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: $muted;
+  transition: color 0.16s ease;
+}
+
+.composerPrompt:hover .composerPromptText {
+  color: $ink;
+}
+
+// The pencil's disc. Decoration: it takes the slot a trailing arrow would,
+// and it inherits the field's hover rather than having a state of its own.
+.composerPromptGo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f3f3f0;
+  color: $muted;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.composerPromptIcon {
+  width: 16px;
+  height: 16px;
+}
+
+// Three shortcuts on one baseline, each one a tile and a word. They share
+// the row evenly so a long label shortens instead of pushing the others.
+.composerQuick {
+  display: flex;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid $line-soft;
+}
+
+.quickAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 10px 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: $ink-soft;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+    color: $ink;
+  }
+
+  &:hover .quickTile {
+    background: #e4e4de;
+    color: $ink;
+  }
+}
+
+.quickTile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #f2f2ef;
+  color: $ink-soft;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.quickLabel {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.quickIcon {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
+// Narrower than a laptop: the pencil gives up its space for the words.
+@media (max-width: 560px) {
+  .composer {
+    padding: 12px 12px 6px;
+  }
+
+  .composerPrompt {
+    padding-right: 18px;
+  }
+
+  .composerPromptGo {
+    display: none;
+  }
+}
+
+// Narrower than a phone held upright: the shortcuts stack their tile over
+// their word, which keeps every label readable instead of cut to "Ask th…".
+@media (max-width: 460px) {
+  .composer {
+    padding-inline: 12px;
+  }
+
+  .composerQuick {
+    gap: 2px;
+  }
+
+  .quickAction {
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 4px;
+    min-height: 0;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  .quickLabel {
+    white-space: normal;
+    line-height: 1.25;
+  }
+
+  .quickTile {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Feed
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+//  Feed
+//  Tabs on the left, a live mark on the right, then the cards. The feed
+//  keeps its own vertical rhythm so a repost and an original sit at the
+//  same distance from each other.
+// ------------------------------------------------------------------
+.feed {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.feedHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 2px 2px 0;
+}
+
+.feedTabs {
+  display: flex;
+  gap: 2px;
+}
+
+.feedTab,
+.feedTabActive {
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: $muted;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+  }
+}
+
+.feedTabActive {
+  color: $ink;
+  font-weight: 600;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px $line;
+
+  &:hover {
+    background: #ffffff;
+  }
+}
+
+.feedLive {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+// The mark that says the list is not a snapshot. The ring leaves the dot
+// every couple of seconds, the way a heartbeat would.
+.liveDot {
+  position: relative;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $ink;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border: 1px solid rgba(23, 23, 20, 0.3);
+    border-radius: 50%;
+    animation: live-pulse 2.6s ease-out infinite;
+  }
+}
+
+// On a handset the two tabs split the width the head can give them and
+// the current one keeps its ink in a rule sitting on the hairline — the
+// shape the app uses, where a boxed tab would read as a button inside a
+// page that has no room for buttons. The Live mark stays put: it is the
+// one thing on this row that is a fact rather than a destination.
+@media (max-width: 820px) {
+  .feedHead {
+    margin: 0;
+    gap: 8px;
+  }
+
+  .feedTabs {
+    flex: 1;
+    gap: 4px;
+    border-bottom: 1px solid $line;
+  }
+
+  .feedTab,
+  .feedTabActive {
+    position: relative;
+    flex: 1 1 0;
+    min-height: 40px;
+    padding: 0 8px;
+    border-radius: 8px 8px 0 0;
+    text-align: center;
+  }
+
+  .feedTabActive {
+    background: none;
+    box-shadow: none;
+
+    &:hover {
+      background: none;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      bottom: -1px;
+      left: 10px;
+      height: 2px;
+      border-radius: 2px;
+      background: $ink;
+    }
+  }
+
+  .feedLive {
+    flex-shrink: 0;
+  }
+}
+
+.newPosts {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $ink;
+  cursor: pointer;
+  animation: rise-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.newDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $ink;
+}
+
+.feedError {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid $line;
+  border-left: 3px solid $ink;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: $ink;
+}
+
+.feedErrorClose {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+  }
+}
+
+// Two quiet cards while the first page of a tab is in flight.
+.skeleton {
+  @include surface(20px);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.skeletonLine,
+.skeletonLineShort {
+  height: 12px;
+  border-radius: 999px;
+  background: #eeeeec;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonLine {
+  width: 100%;
+}
+
+.skeletonLineShort {
+  width: 62%;
+}
+
+.feedEmpty {
+  @include surface(30px 24px);
+
+  text-align: center;
+}
+
+.feedEmptyIcon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #f1f1ee;
+  color: $ink-soft;
+}
+
+.feedEmptyTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.feedEmptyText {
+  margin: 8px auto 0;
+  max-width: 48ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: $muted;
+}
+
+.feedEmptyAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  margin-top: 14px;
+  padding: 0 18px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+// One pixel of nothing at the end of the list. It exists for the observer
+// alone, so it must not add rhythm of its own — the button below already
+// carries the gap.
+.scrollSentinel {
+  height: 1px;
+}
+
+.loadMore {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    border-color: #c9c9c4;
+    background: #fafaf9;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+.listEnd,
+.feedFoot {
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: $faint;
+  text-align: center;
+}
+
+.feedFoot {
+  padding-top: 10px;
+}
+
+// ------------------------------------------------------------------
+//  Right rail
+// ------------------------------------------------------------------
+.railCard {
+  @include surface(16px);
+}
+
+.railTitle {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+// A fact about a card, not a control: same paper as the card, quieter than
+// the title it sits beside. Used where a card needs one word of context —
+// "Private", on the numbers only its owner can see.
+.railChip {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+// Inside a rail the strength row sits directly under the title, so it does
+// not need the separator it uses in the home profile card.
+.railCard .strengthRow {
+  width: auto;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+// ------------------------------------------------------------------
+//  Rail
+//
+//  One heading and one figure on the same line, then the prose, then the
+//  part that moves. The spacing below is what stops a rail card reading as
+//  a paragraph with things stuck to it.
+// ------------------------------------------------------------------
+.railHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+
+  .railTitle {
+    margin: 0;
+  }
+}
+
+.strengthBadge {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  color: $ink;
+}
+
+.strengthTier {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: $ink;
+}
+
+.strengthNote {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: $muted;
+}
+
+// In a rail the bar follows the note instead of a row of its own.
+.railCard .strengthBar {
+  margin-top: 12px;
+  margin-bottom: 16px;
+}
+
+// Prose that follows a block needs air above it; the home cards read as one
+// column, so this rule is scoped to the card rather than to the class.
+.railCard .railNote {
+  margin-top: 12px;
+}
+
+.railCard .viewRow {
+  margin-top: 10px;
+}
+
+// A privacy line states a fact, so the value stays quieter than a link.
+.railCard .rows .rowValue {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: $faint;
+}
+
+.queueList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.queueItem {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.queueIndex {
+  padding-top: 1px;
+  font-size: 11px;
+  color: $faint;
+}
+
+.queueText {
+  color: $ink;
+}
+
+.queueStatus {
+  display: block;
+  margin-top: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+.railNote {
+  margin: 0;
+  padding: 0 2px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: $faint;
+}
+
+// ------------------------------------------------------------------
+//  Profile hero
+// ------------------------------------------------------------------
+.profileHero {
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.heroCover {
+  position: relative;
+  height: clamp(110px, 18vw, 168px);
+  overflow: hidden;
+  background: linear-gradient(115deg, #23231f 0%, #171714 58%, #3d3d36 100%);
+}
+
+.heroPattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    radial-gradient(#ffffff 1px, transparent 1px),
+    radial-gradient(#ffffff 1px, transparent 1px);
+  background-position:
+    0 0,
+    6px 6px;
+  background-size: 12px 12px;
+}
+
+.heroCoverImg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroBody {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 0 24px 20px;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-bottom: 18px;
+  }
+}
+
+// The portrait stands half in the cover, so its wrapper is the thing that
+// is positioned and raised: .heroCover is positioned too, and a static disc
+// beside it loses that fight and gets painted over — which is exactly how
+// the cover used to cut across the face. The same lesson already sits on
+// .profileCardAvatar in the rail.
+//
+// The line is top-aligned for a reason: under `align-items: flex-end` the
+// alignment hands a negative top margin straight back, and the disc ends up
+// sitting below the cover instead of across its edge. Top-aligned, the pull
+// is real and the disc straddles the seam at any cover height.
+.heroPhoto {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  margin-top: -64px;
+
+  @media (max-width: 640px) {
+    margin-top: -44px;
+  }
+}
+
+// `.avatar` centres its initials with `inline-grid`; this rule used to swap
+// that for a plain block, which left the letters flush against the left rim
+// and cropped by the disc. It keeps a grid of its own so they stay centred,
+// and carries the ring that lifts the portrait off both the cover and the
+// white body it overlaps.
+.profileAvatar {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  font-size: 34px;
+  line-height: 1;
+  margin-top: 0;
+  border: 4px solid #ffffff;
+  box-shadow:
+    0 0 0 1px $line,
+    0 10px 24px -16px rgba(10, 10, 12, 0.5);
+
+  @media (max-width: 640px) {
+    width: 88px;
+    height: 88px;
+    font-size: 24px;
+  }
+}
+
+// The text starts just under the cover seam, so the name reads as the
+// first line of the body rather than a caption on the portrait. On a phone
+// it takes the full width under the disc instead of sharing a squeezed row.
+.heroText {
+  min-width: 0;
+  padding-top: 14px;
+  padding-bottom: 4px;
+
+  @media (max-width: 640px) {
+    flex: 1 1 100%;
+    padding-top: 2px;
+    padding-bottom: 0;
+  }
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: clamp(21px, 2.4vw, 25px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.heroHeadline {
+  margin: 5px 0 0;
+  max-width: 62ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: $muted;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: $faint;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+  padding-top: 14px;
+
+  @media (max-width: 640px) {
+    flex: 1 1 100%;
+    margin-left: 0;
+    padding-top: 0;
+  }
+}
+
+.buttonGhost {
+  @include pill;
+}
+
+.buttonGhost:hover {
+  background: $hover;
+}
+
+// ------------------------------------------------------------------
+//  Cards and rows — shared by profile and settings
+// ------------------------------------------------------------------
+.card {
+  @include surface(20px 24px);
+
+  // The settings index links straight to a card; without this the sticky
+  // header would sit on top of the heading it landed on.
+  scroll-margin-top: 76px;
+}
+
+// Visible to a screen reader, not to the eye — used where a mark already
+// carries the meaning visually but the text still has to exist.
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.cardNote {
+  font-size: 11.5px;
+  color: $faint;
+  white-space: nowrap;
+}
+
+// The same small label, but it is a link. It answers a hover so the reader
+// knows the row goes somewhere.
+.cardAction {
+  font-size: 11.5px;
+  color: $muted;
+  text-decoration: none;
+  white-space: nowrap;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.cardText {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #3a3b40;
+  white-space: pre-line;
+}
+
+.rows {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 20px;
+  padding: 11px 0;
+  border-top: 1px solid $line-soft;
+
+  &:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+.rowLabel {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: $muted;
+}
+
+.rowValue {
+  font-size: 13px;
+  color: $ink;
+  overflow-wrap: anywhere;
+
+  // A link inside a row keeps the row's voice: ink, underlined, and only
+  // underlined — no accent colour to break the monochrome.
+  a {
+    color: $ink;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+
+    @include focus-ring;
+
+    &:hover {
+      color: $muted;
+    }
+  }
+}
+
+.linkRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  padding: 10px 0;
+  border-top: 1px solid $line-soft;
+  font-size: 13px;
+  color: $ink;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  &:hover .linkRowGo {
+    transform: translateX(3px);
+  }
+}
+
+.linkRowGo {
+  color: $faint;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// A row that performs an action instead of leaving the page — sign out is
+// the only one so far. It borrows the whole look of .linkRow so the two sit
+// in the same column without a seam, then undoes everything a native button
+// brings with it.
+.linkButton {
+  @extend .linkRow;
+
+  width: 100%;
+  border-inline: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover:not(:disabled) .linkRowGo {
+    transform: translateX(3px);
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+// ------------------------------------------------------------------
+//  History rows (experience, education)
+// ------------------------------------------------------------------
+.entryList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid $line-soft;
+
+  &:first-child {
+    padding-top: 4px;
+    border-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 2px;
+  }
+}
+
+// A square mark, not a disc: it stands where a company logo would, so the
+// row reads as history without needing one.
+.entryMark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #fafaf8;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink-soft;
+}
+
+.entryTitle {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.entryMeta {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: $muted;
+}
+
+.entryDates {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: $faint;
+}
+
+.entryText {
+  margin: 8px 0 0;
+  max-width: 70ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #3a3b40;
+  white-space: pre-line;
+}
+
+// ------------------------------------------------------------------
+//  Skills
+// ------------------------------------------------------------------
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 12.5px;
+  line-height: 1.2;
+  color: $ink;
+}
+
+.chipLevel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+// ------------------------------------------------------------------
+//  Checklist (profile strength)
+//
+//  Every line is either a statement or a door. A closed section recedes
+//  and lets its tick do the talking; an open one stays in ink, because it
+//  is the only thing on the card that wants pressing.
+// ------------------------------------------------------------------
+.checkList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid $line-soft;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: $ink;
+
+  &:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+}
+
+.checkRowDone {
+  @extend .checkRow;
+
+  color: $muted;
+}
+
+// The whole row is the button, so the target is the line and not the
+// word at the end of it.
+.checkOpen {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover .checkLabel,
+  &:focus-visible .checkLabel {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &:hover .checkGo,
+  &:focus-visible .checkGo {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.checkLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkGo {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 12px;
+  color: $faint;
+  opacity: 0.4;
+  transform: translateX(-2px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.checkMark,
+.checkMarkDone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 50%;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.checkMark {
+  border: 1px solid $line;
+  background: #ffffff;
+  color: $faint;
+}
+
+.checkMarkDone {
+  border: 1px solid $ink;
+  background: $ink;
+  color: #ffffff;
+}
+
+// ------------------------------------------------------------------
+//  Settings index
+// ------------------------------------------------------------------
+.settingNav {
+  @include surface(10px);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+
+  @media (min-width: 821px) {
+    position: sticky;
+    top: 74px;
+  }
+}
+
+.settingNavTitle {
+  margin: 4px 8px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $faint;
+}
+
+.settingNavItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 38px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: $ink;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Page head (settings)
+// ------------------------------------------------------------------
+.pageTitle {
+  margin: 0;
+  font-size: clamp(21px, 2.4vw, 24px);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.pageLede {
+  margin: 8px 0 0;
+  max-width: 62ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: $muted;
+}
+
+.footNote {
+  margin: 14px 0 0;
+  max-width: 66ch;
+  font-size: 12px;
+  line-height: 1.65;
+  color: $faint;
+}
+
+// The sentence a card shows when the section it describes is empty.
+.emptyLine {
+  margin: 0;
+  padding: 6px 0 2px;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: $muted;
+}
+
+// ------------------------------------------------------------------
+//  Footer
+// ------------------------------------------------------------------
+.footer {
+  margin-top: 32px;
+  border-top: 1px solid $line;
+  background: #ffffff;
+}
+
+.footerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 22px;
+  max-width: $shell;
+  margin: 0 auto;
+  padding-block: 20px;
+  font-size: 11.5px;
+  color: $muted;
+
+  @include shell-pad;
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+
+  a {
+    color: $muted;
+    text-decoration: none;
+
+    &:hover {
+      color: $ink;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+}
+
+// ------------------------------------------------------------------
+//  Sheet — the composer and the share dialog
+//  One overlay, one panel. It sits above the drawer (130) so a menu left
+//  open behind it can never paint over the top of it.
+// ------------------------------------------------------------------
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(10, 10, 12, 0.48);
+  cursor: pointer;
+  animation: fade-in 0.18s ease both;
+}
+
+.sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(88vh, 760px);
+  padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow:
+    0 30px 80px -30px rgba(23, 23, 20, 0.55),
+    0 4px 16px -8px rgba(23, 23, 20, 0.2);
+  animation: sheet-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  // A photo dropped anywhere on the sheet is the photo being attached.
+  &[data-dragging] {
+    outline: 2px dashed $ink;
+    outline-offset: -10px;
+  }
+}
+
+// On a handset a dialog comes up from the bottom edge at full width, the
+// way the app's composer does: a floating card inset 16px from three
+// sides spends the only screen there is. Keyed on `:has(> .sheet)` so the
+// photo lightbox, which shares the overlay, keeps centring its picture.
+@media (max-width: 560px) {
+  .overlay:has(> .sheet) {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .sheet {
+    width: 100%;
+    max-height: 92svh;
+    padding: 16px 16px 22px;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+.sheetHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.sheetTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+
+.sheetSub {
+  margin: 4px 0 0;
+  max-width: 46ch;
+  font-size: 12px;
+  line-height: 1.55;
+  color: $muted;
+}
+
+.sheetClose {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+.sheetCloseIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.sheetPerson {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.sheetIdentity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  min-width: 0;
+}
+
+.sheetName {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.sheetSubline {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: $faint;
+}
+
+// The audience is a real select under a real icon: one control, not a
+// menu with three states to keep in sync.
+.audienceChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  margin-top: 4px;
+  padding: 3px 8px 3px 6px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #fafaf8;
+}
+
+.audienceIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: $muted;
+}
+
+.audienceSelect {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $ink;
+  cursor: pointer;
+
+  @include focus-ring;
+}
+
+.sheetText {
+  width: 100%;
+  min-height: 132px;
+  max-height: 360px;
+  margin-top: 14px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  color: $ink;
+  resize: none;
+  overflow-y: auto;
+
+  &::placeholder {
+    color: #a3a5ab;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+.sheetMedia {
+  position: relative;
+  margin: 4px 0 0;
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #f7f7f5;
+}
+
+.sheetMediaImg {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+}
+
+.sheetMediaRemove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(23, 23, 20, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $ink;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+
+  @include focus-ring;
+}
+
+.draftNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f7f7f5;
+  font-size: 11.5px;
+  color: $muted;
+}
+
+.draftDiscard {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $ink;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  @include focus-ring;
+}
+
+.formError {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  border-left: 3px solid $ink;
+  border-radius: 6px;
+  background: #f7f7f5;
+  font-size: 12px;
+  line-height: 1.55;
+  color: $ink;
+}
+
+.sheetFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid $line-soft;
+}
+
+.sheetTools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolButton {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: #ffffff;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    color: $ink;
+    background: $hover;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+.sheetHint {
+  font-size: 11px;
+  color: $faint;
+}
+
+.sheetPublish {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.counter {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: $faint;
+}
+
+.counterOver {
+  color: $ink;
+  font-weight: 600;
+}
+
+.publish {
+  min-height: 38px;
+  padding: 0 22px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: $ink;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    opacity 0.16s ease,
+    background-color 0.16s ease;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    background: $ink-soft;
+  }
+
+  &:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Post card
+// ------------------------------------------------------------------
+.post {
+  @include surface(16px 18px 8px);
+
+  scroll-margin-top: 78px;
+}
+
+// A permalink lands on the card it names; the flash says "this one".
+.postFlash {
+  animation: post-flash 2.4s ease both;
+}
+
+.postHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.postAvatar {
+  width: 44px;
+  height: 44px;
+  font-size: 14px;
+}
+
+.postIdentity {
+  min-width: 0;
+  flex: 1;
+}
+
+.postNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.postName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+
+  @include focus-ring;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.postBadge {
+  flex-shrink: 0;
+  padding: 1px 7px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+// Follow is a text-weight decision, not a second button on the card.
+.postFollow,
+.postFollowing {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: $ink;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+.postFollowing {
+  color: $faint;
+  font-weight: 500;
+}
+
+.postHeadline {
+  overflow: hidden;
+  margin: 2px 0 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: $muted;
+}
+
+.postMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 3px 0 0;
+  font-size: 11px;
+  color: $faint;
+}
+
+.postMetaIcon {
+  width: 12px;
+  height: 12px;
+}
+
+.postMenuWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.menuButton {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -6px 0 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+  }
+}
+
+.menuIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  width: 236px;
+  padding: 6px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow:
+    0 16px 36px -20px rgba(23, 23, 20, 0.45),
+    0 2px 8px -6px rgba(23, 23, 20, 0.16);
+  animation: menu-in 0.16s ease both;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: $ink;
+  text-align: left;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.menuItemIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: $muted;
+}
+
+.menuDanger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $ink;
+  text-align: left;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+// The one question a destructive action is allowed to ask — inside the
+// menu that offered it, so nothing covers the post it is about.
+.menuConfirm {
+  margin-top: 4px;
+  padding: 10px;
+  border-top: 1px solid $line-soft;
+}
+
+.menuConfirmText {
+  margin: 0 0 10px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: $muted;
+}
+
+.menuConfirmActions {
+  display: flex;
+  gap: 6px;
+}
+
+.menuCancel {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Post card — body, media, quoted original, counts
+// ------------------------------------------------------------------
+
+// Three thousand characters fold to eight lines until the reader asks
+// for the rest; `See more` is the only control in the body.
+.postBody,
+.postBodyClamp {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  line-height: 1.62;
+  color: $ink-soft;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.postBodyClamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 8;
+  line-clamp: 8;
+  overflow: hidden;
+}
+
+.postLink {
+  color: $ink;
+  text-decoration: underline;
+  text-decoration-color: $line;
+  text-underline-offset: 2px;
+
+  &:hover {
+    text-decoration-color: $ink;
+  }
+}
+
+// Tags read as tags without becoming destinations — there is no tag page.
+.tag {
+  font-weight: 600;
+  color: $ink;
+}
+
+.seeMore {
+  margin-top: 6px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+// The inline editor that replaces a card's own text while the author is
+// rewriting it. It sits exactly where the paragraph sat — same measure, same
+// type — so the card does not jump under the reader's eyes, and the only new
+// furniture is the quiet rule and the two controls underneath.
+.postEdit {
+  margin-top: 12px;
+}
+
+.postEditArea {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.62;
+  color: $ink;
+  resize: vertical;
+
+  @include focus-ring;
+
+  &:focus {
+    border-color: $ink;
+  }
+}
+
+.postEditActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+// The counter is the one piece of information a writer actually checks before
+// saving, so it stays on the left and out of the buttons' way.
+.postEditCount {
+  flex: 1;
+  font-size: 11px;
+  color: $muted;
+}
+
+.postEditCancel {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    border-color: $ink;
+    color: $ink;
+  }
+}
+
+.postEditSave {
+  min-height: 32px;
+  padding: 0 16px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: $ink;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.imageButton {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: $line-soft;
+  cursor: zoom-in;
+
+  @include focus-ring;
+}
+
+.postImage {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: cover;
+}
+
+// A clip sits in the same frame a photo earns, but on black: a video keeps
+// its own aspect ratio, so the letterbox is the player's, not a cropped
+// cover. Controls stay native — they are the one affordance every viewer
+// already knows.
+.videoMedia {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #0c0c0a;
+}
+
+.postVideo {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  background: #0c0c0a;
+}
+
+// A repost carries the original underneath, quieter than the note above it.
+.quote {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #fbfbfa;
+}
+
+.quoteHead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.quoteIdentity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: 1px;
+}
+
+.quoteName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $ink;
+}
+
+.quoteHeadline {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: $muted;
+}
+
+.quoteBody {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  overflow: hidden;
+  margin: 9px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: $muted;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.quoteImage {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  margin-top: 10px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+// Counts sit above the action bar, never inside it: a number that moves
+// is information, a button that moves is a surprise.
+.postCounts {
+  display: flex;
+  gap: 12px;
+  min-height: 16px;
+  margin: 12px 0 0;
+  font-size: 11.5px;
+  color: $faint;
+  font-variant-numeric: tabular-nums;
+
+  span:empty {
+    display: none;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Post card — action bar
+//
+//  Pressed is ink, open is ink on the hover ground. This palette has no
+//  accent to spend, so weight and ground carry the state instead.
+// ------------------------------------------------------------------
+.postActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid $line-soft;
+}
+
+.action {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+  }
+}
+
+.actionActive {
+  color: $ink;
+
+  .actionIcon {
+    stroke-width: 2.3;
+  }
+}
+
+.actionOpen {
+  color: $ink;
+  background: $hover;
+}
+
+.actionIcon {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+}
+
+.actionLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 460px) {
+    display: none;
+  }
+}
+
+// The Like control is now a slot of its own: a wrapper that holds the
+// button and, when it is opened, the row of reactions above it. The wrapper
+// takes the flex share the button used to take, and the button fills it.
+.reactionWrap {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+
+  .action {
+    width: 100%;
+  }
+}
+
+// The picker rises above the button, centred on it, in the same lifted
+// paper the share menu uses so it reads as a temporary layer over the card.
+.reactionPicker {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(23, 23, 20, 0.14);
+  transform: translateX(-50%);
+}
+
+.reactionPick {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+    transform: translateY(-2px);
+  }
+}
+
+.reactionPickOn {
+  color: $ink;
+  background: $hover;
+}
+
+.reactionPickIcon {
+  width: 20px;
+  height: 20px;
+}
+
+// The name under each glyph is small and only shows in the picker, so the
+// button itself stays a single tidy word.
+.reactionPickLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+// The bookmark is the one icon-only control: it is a private action, so
+// it does not take a fifth of the bar.
+.saveAction {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+  }
+}
+
+.saveActive {
+  color: $ink;
+}
+
+// The card on a handset: the desk's 18px gutter becomes 12, the 44px
+// disc becomes 40, and the body keeps its size — the words are why the
+// card is here. What a thumb touches grows instead: the action bar is
+// 40px tall, and below 460px its labels step out, where four words on
+// one row would each be cut to three letters.
+@media (max-width: 560px) {
+  .feed {
+    gap: 10px;
+  }
+
+  .post {
+    padding: 12px 12px 6px;
+  }
+
+  .postHead {
+    gap: 10px;
+  }
+
+  .postAvatar {
+    width: 40px;
+    height: 40px;
+    font-size: 13px;
+  }
+
+  .postImage {
+    max-height: 340px;
+  }
+
+  .postActions {
+    margin-top: 8px;
+  }
+
+  .action,
+  .saveAction {
+    min-height: 40px;
+  }
+
+  .commentBubble {
+    padding: 8px 10px;
+  }
+}
+
+// A failed write says so on the card it belongs to, not in a toast that
+// covers another post.
+.cardError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border: 1px solid $line;
+  border-radius: 6px;
+  background: #fbfbfa;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: $ink-soft;
+}
+
+.cardErrorClose {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Comments
+//
+//  The two newest ship with the post; the thread opens for the rest. A
+//  new comment appears before the server answers and is swapped for the
+//  real row when it does.
+// ------------------------------------------------------------------
+.thread {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid $line-soft;
+}
+
+.threadMore {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 6px 4px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+  text-align: left;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+.commentList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comment {
+  display: flex;
+  gap: 9px;
+}
+
+.commentBubble {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #f7f7f5;
+}
+
+.commentHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.commentName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $ink;
+}
+
+.commentHeadline {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: $muted;
+}
+
+.commentBody {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.58;
+  color: $ink-soft;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.commentMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: $faint;
+}
+
+.commentDelete {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+.commentForm {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.commentInput {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  max-height: 160px;
+  padding: 9px 12px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: $ink;
+  resize: none;
+
+  @include focus-ring;
+
+  &::placeholder {
+    color: $faint;
+  }
+}
+
+.commentSend {
+  flex-shrink: 0;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: $ink;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:disabled {
+    border-color: $line;
+    background: #ffffff;
+    color: $faint;
+    cursor: not-allowed;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Share
+//
+//  Two honest options — repost with a thought, or copy the permalink.
+//  A third button with nothing behind it would be worse than none.
+// ------------------------------------------------------------------
+.shareQuote {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #fbfbfa;
+}
+
+.shareQuoteText {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  min-width: 0;
+
+  strong {
+    font-size: 12px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: $muted;
+    overflow-wrap: anywhere;
+  }
+}
+
+.shareField {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px 12px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  color: $ink;
+  resize: vertical;
+
+  @include focus-ring;
+
+  &::placeholder {
+    color: $faint;
+  }
+}
+
+// The small tally under the invite note — a quiet guardrail, not a label.
+.noteCount {
+  margin: 6px 0 0;
+  text-align: right;
+  font-size: 11px;
+  color: $faint;
+}
+
+.shareActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.shareGhost,
+.shareCopied,
+.sharePrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:disabled {
+    cursor: progress;
+  }
+}
+
+.shareGhost {
+  border: 1px solid $line;
+  background: #ffffff;
+  color: $ink;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.shareCopied {
+  border: 1px solid $line;
+  background: $hover;
+  color: $muted;
+}
+
+.sharePrimary {
+  margin-left: auto;
+  border: 1px solid $ink;
+  background: $ink;
+  color: #ffffff;
+
+  &:hover {
+    background: $ink-soft;
+  }
+
+  &:disabled {
+    border-color: $line;
+    background: #ffffff;
+    color: $faint;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Photo lightbox
+// ------------------------------------------------------------------
+.lightbox {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  width: min(1040px, 94vw);
+  max-height: 90vh;
+}
+
+.lightboxClose {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: #ffffff;
+  color: $ink;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.lightboxCloseIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.lightboxImage {
+  display: block;
+  max-width: 100%;
+  max-height: 86vh;
+  border-radius: 10px;
+  background: #ffffff;
+  object-fit: contain;
+}
+
+// ------------------------------------------------------------------
+//  Context rail — activity numbers and people worth following
+// ------------------------------------------------------------------
+
+// Four numbers, one line each: the name on the left, the figure on the
+// right, a hairline under every row so the eye reads top to bottom. A
+// definition pair still — the label and its number travel together for a
+// screen reader, exactly as they sit side by side on screen.
+.activityGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin: 6px 0 0;
+  border-top: 1px solid $line;
+}
+
+.activityCell {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 2px;
+  border-bottom: 1px solid $line;
+}
+
+.activityValue {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+}
+
+.activityLabel {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+.suggestionList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  margin-top: 10px;
+}
+
+.suggestion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  border-radius: 8px;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.suggestionBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  gap: 1px;
+  min-width: 0;
+}
+
+.suggestionName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $ink;
+}
+
+.suggestionHeadline {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: $muted;
+}
+
+// Follow is outlined; Following is a hairline that only comes alive on
+// hover, because unfollowing should take one deliberate move.
+.suggestionFollow,
+.suggestionFollowing {
+  flex-shrink: 0;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:disabled {
+    cursor: progress;
+  }
+}
+
+.suggestionFollow {
+  border: 1px solid $ink;
+  background: #ffffff;
+  color: $ink;
+
+  &:hover {
+    background: $ink;
+    color: #ffffff;
+  }
+}
+
+.suggestionFollowing {
+  border: 1px solid $line;
+  background: #ffffff;
+  color: $muted;
+
+  &:hover {
+    border-color: $muted;
+    color: $ink;
+  }
+}
+
+.suggestionError {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: $muted;
+}
+
+// ------------------------------------------------------------------
+//  Profile card as one link
+//
+//  The whole card is the control, so the hover has to belong to the
+//  card rather than to a link inside it, and the arrow is decoration
+//  that answers the same hover.
+// ------------------------------------------------------------------
+.profileCardLink {
+  display: block;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    .profileName {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .profileCardGo {
+      color: $ink;
+
+      span:last-child {
+        transform: translateX(2px);
+      }
+    }
+  }
+}
+
+.profileCardGo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid $line-soft;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+  transition: color 0.16s ease;
+
+  span:last-child {
+    transition: transform 0.16s ease;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Profile card on a handset
+//
+//  Under the tablet breakpoint the card follows the feed instead of
+//  leading it, and everything that reads as a poster on a desk reads as
+//  a signature on a phone: no cover band, a 56px disc beside the name,
+//  and the strength bar under both. The same facts — who, doing what,
+//  where, how complete, and the way through — in a third of the height.
+// ------------------------------------------------------------------
+@media (max-width: 820px) {
+  .cover {
+    display: none;
+  }
+
+  .profileCardBody {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "photo name"
+      "photo headline"
+      "meta meta"
+      "strength strength"
+      "bar bar"
+      "go go";
+    align-items: center;
+    justify-items: start;
+    column-gap: 14px;
+    row-gap: 4px;
+    padding: 14px 16px;
+    text-align: left;
+  }
+
+  .profileCardAvatar {
+    grid-area: photo;
+    width: 56px;
+    height: 56px;
+    margin-top: 0;
+    border-width: 2px;
+    font-size: 17px;
+  }
+
+  .profileName {
+    grid-area: name;
+    font-size: 15px;
+  }
+
+  .profileHeadline {
+    grid-area: headline;
+    align-self: start;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .profileMeta {
+    grid-area: meta;
+    margin-top: 6px;
+  }
+
+  .strengthRow {
+    grid-area: strength;
+    margin-top: 8px;
+    padding-top: 10px;
+  }
+
+  .strengthBar {
+    grid-area: bar;
+    margin-top: 0;
+  }
+
+  .profileCardGo {
+    grid-area: go;
+    margin-top: 6px;
+    padding-top: 8px;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Motion
+// ------------------------------------------------------------------
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(18px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// The live dot breathes rather than blinks: a pulse says "up to date",
+// a blink says "loading".
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.78);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Placeholders breathe rather than sweep: a fade says "this is on its way",
+// where a travelling highlight says "drawing something" — and a page that
+// already exists in outline does not need a light moving across it.
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// A permalink lands on a card; the flash is the card saying "this one".
+@keyframes post-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(23, 23, 20, 0);
+  }
+  16% {
+    box-shadow: 0 0 0 3px rgba(23, 23, 20, 0.14);
+  }
+}
+
+// ------------------------------------------------------------------
+//  Editing the profile
+//
+//  The page is server output; everything below dresses the small client
+//  island around it (ProfileEditor.tsx): a pencil in a heading, a control
+//  on each picture, and one sheet per section. The sheet reuses the
+//  composer's panel, so a form opened on the profile looks like a form
+//  opened on the feed.
+// ------------------------------------------------------------------
+.cardTools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+// A pencil that stays quiet until it is read: no fill, no border, ink only
+// on hover. The heading is the loud thing; this is the invitation.
+.editTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+  white-space: nowrap;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.editTriggerIcon {
+  width: 13px;
+  height: 13px;
+}
+
+// The hero's own call to action, in the same pill as the ghost button
+// beside it.
+.editTriggerSolid {
+  @include pill;
+
+  background: $ink;
+  color: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    border-color: #000000;
+    background: #000000;
+  }
+}
+
+// ------------------------------------------------ the two pictures
+.coverTools {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+}
+
+// On a photograph of unknown brightness the control brings its own ink:
+// a translucent dark pill with a hairline, readable over a bright sky and
+// over a dark wall alike.
+.photoButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(23, 23, 20, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    background: rgba(23, 23, 20, 0.72);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.photoRemove {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(23, 23, 20, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    background: rgba(23, 23, 20, 0.72);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.photoButtonIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+// On the rim of the portrait, where every product the reader has used
+// before puts it.
+.avatarTools {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  z-index: 2;
+  display: flex;
+  gap: 4px;
+}
+
+.avatarEdit,
+.avatarRemove {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: #ffffff;
+  color: $ink;
+  box-shadow: 0 1px 4px rgba(23, 23, 20, 0.16);
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    background: $hover;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+.avatarRemove {
+  color: $muted;
+}
+
+.avatarEditIcon {
+  width: 14px;
+  height: 14px;
+}
+
+// A picture that could not be saved says so where the eye already is: a
+// small ink bar at the bottom of the window, not a dialog to dismiss.
+.mediaToast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(440px, calc(100vw - 32px));
+  padding: 12px 14px 12px 16px;
+  border-radius: 10px;
+  background: $ink;
+  box-shadow: 0 18px 40px -20px rgba(23, 23, 20, 0.7);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #ffffff;
+  transform: translateX(-50%);
+}
+
+.mediaToastClose {
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: #ffffff;
+  }
+}
+
+// ------------------------------------------------ the section sheet
+.editGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px 16px;
+
+  @media (min-width: 620px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.editField {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 0 13px;
+    border: 1px solid $line;
+    border-radius: 8px;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+    color: $ink;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &::placeholder {
+      color: #a3a5ab;
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: $ink;
+      box-shadow: 0 0 0 3px rgba(23, 23, 20, 0.08);
+    }
+  }
+
+  input,
+  select {
+    height: 44px;
+  }
+
+  textarea {
+    min-height: 108px;
+    padding: 11px 13px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+}
+
+.editFieldWide {
+  @media (min-width: 620px) {
+    grid-column: 1 / -1;
+  }
+}
+
+.editLabel {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: $muted;
+}
+
+.editHint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: $faint;
+}
+
+// A checkbox is a row, not a stacked field: the label sits beside the box
+// and the box keeps its own size.
+.editCheck {
+  flex-direction: row;
+  align-items: center;
+  gap: 9px;
+  padding-top: 4px;
+  font-size: 13px;
+  color: $ink;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    accent-color: $ink;
+  }
+}
+
+.editEntry {
+  margin: 0 0 12px;
+  padding: 16px;
+  border: 1px solid #ececea;
+  border-radius: 10px;
+  background: #fcfcfa;
+}
+
+.editEntryHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.editEntryIndex {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: $faint;
+}
+
+.editEntryTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.editEntryRemove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: #ffffff;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    background: $hover;
+  }
+}
+
+.editEntryRemoveIcon {
+  width: 13px;
+  height: 13px;
+}
+
+.editAdd {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
+  margin-top: 4px;
+  border: 1px dashed #d9d9d6;
+  border-radius: 10px;
+  background: #fafaf8;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    border-color: $ink;
+    background: #ffffff;
+    color: $ink;
+  }
+}
+
+.editSkillRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.editSkillName {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: $ink;
+
+  &:focus-visible {
+    outline: none;
+    border-color: $ink;
+    box-shadow: 0 0 0 3px rgba(23, 23, 20, 0.08);
+  }
+}
+
+.editSkillLevel {
+  height: 40px;
+  padding: 0 8px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: $ink;
+
+  &:focus-visible {
+    outline: none;
+    border-color: $ink;
+    box-shadow: 0 0 0 3px rgba(23, 23, 20, 0.08);
+  }
+}
+
+.editError {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #e6cdc6;
+  border-radius: 8px;
+  background: #fdf5f2;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #8a3520;
+}
+
+.editFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid $line-soft;
+}
+
+.editCancel {
+  @include pill;
+
+  border-color: $line;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    border-color: $ink;
+    color: $ink;
+  }
+
+  &:disabled {
+    color: $faint;
+    cursor: progress;
+  }
+}
+
+.editSave {
+  @include pill;
+
+  background: $ink;
+  color: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    border-color: #000000;
+    background: #000000;
+  }
+
+  &:disabled {
+    border-color: #3f3f3a;
+    background: #3f3f3a;
+    cursor: progress;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Page skeleton
+//
+//  The workspace's own loading state: the bar and the footer belong to the
+//  layout and are already on screen, so what is missing is only the middle.
+//  It is drawn at the size the real page will take — cover, portrait, name,
+//  cards — so the page appears in place rather than pushing everything
+//  down when it arrives. Nothing spins; the blocks breathe.
+// ------------------------------------------------------------------
+.skeletonHero {
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.skeletonHeroCover {
+  display: block;
+  width: 100%;
+  height: clamp(110px, 18vw, 168px);
+  background: #ececea;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+// Drawn to the same geometry as the real hero — top-aligned line, the
+// disc pulling itself 64px up into the cover — so the page does not shift
+// under the reader when the content lands.
+.skeletonHeroBody {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 0 24px 20px;
+}
+
+.skeletonAvatar {
+  display: block;
+  width: 128px;
+  height: 128px;
+  flex-shrink: 0;
+  margin-top: -64px;
+  border: 4px solid #ffffff;
+  border-radius: 50%;
+  background: #e4e4e1;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+
+  @media (max-width: 640px) {
+    width: 88px;
+    height: 88px;
+    margin-top: -44px;
+  }
+}
+
+.skeletonStack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 14px;
+  padding-bottom: 4px;
+}
+
+.skeletonBlock {
+  @include surface(20px 24px);
+
+  display: grid;
+  gap: 10px;
+}
+
+.skeletonBar {
+  height: 4px;
+  border-radius: 999px;
+  background: #ececea;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+// ------------------------------------------------------------------
+//  Social pages — a shared head, card and control set
+//
+//  My Network, Messaging and Notifications are three rooms of the same
+//  building: one page head, one hairline card, one pill. Declared once
+//  here so a new surface cannot invent its own geometry.
+// ------------------------------------------------------------------
+.networkPage,
+.notificationsPage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 0 56px;
+
+  @include shell-pad;
+}
+
+.pageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 20px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 24px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.pageSub {
+  margin: 5px 0 0;
+  max-width: 62ch;
+  font-size: 13px;
+  line-height: 1.6;
+  color: $muted;
+}
+
+.socialCard {
+  @include surface(18px);
+}
+
+.socialCardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 14px;
+  margin-bottom: 8px;
+}
+
+.socialCardTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.socialCardNote {
+  font-size: 11.5px;
+  color: $faint;
+  white-space: nowrap;
+}
+
+.socialEmpty {
+  margin: 0;
+  max-width: 68ch;
+  padding: 14px 2px 6px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: $muted;
+}
+
+.socialError {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid $line;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: $ink;
+}
+
+.socialErrorClose {
+  flex-shrink: 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+// One control, four volumes: outline, ink, hairline, and a filled quiet
+// state for something already done.
+.socialButton,
+.socialButtonSolid,
+.socialButtonGhost,
+.socialButtonQuiet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid $ink;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: $ink;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.55;
+  }
+}
+
+.socialButton:hover:not(:disabled) {
+  background: $ink;
+  color: #ffffff;
+}
+
+.socialButtonSolid {
+  background: $ink;
+  color: #ffffff;
+
+  &:hover:not(:disabled) {
+    border-color: #000000;
+    background: #000000;
+  }
+}
+
+.socialButtonGhost {
+  border-color: $line;
+  color: $muted;
+
+  &:hover:not(:disabled) {
+    border-color: $muted;
+    color: $ink;
+  }
+}
+
+.socialButtonQuiet {
+  border-color: $line;
+  background: $hover;
+
+  &:hover:not(:disabled) {
+    border-color: $muted;
+  }
+}
+
+.buttonIcon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+// ------------------------------------------------------------------
+//  My Network
+// ------------------------------------------------------------------
+.peopleSearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 330px;
+  min-width: 220px;
+}
+
+.peopleSearchIcon {
+  position: absolute;
+  left: 13px;
+  width: 15px;
+  height: 15px;
+  color: $faint;
+  pointer-events: none;
+}
+
+.peopleSearchInput {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 14px 0 35px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  color: $ink;
+
+  @include focus-ring;
+
+  &::placeholder {
+    color: $faint;
+  }
+
+  &:focus {
+    border-color: $ink;
+  }
+}
+
+.networkStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.networkStat {
+  @include surface(12px 14px);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+
+.networkStat dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+.networkStat dd {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: $ink;
+}
+
+.networkTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid $line;
+}
+
+.networkTab,
+.networkTabActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.networkTabActive {
+  border-bottom-color: $ink;
+  color: $ink;
+}
+
+.networkTabCount {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: $hover;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: $muted;
+}
+
+.networkTabActive .networkTabCount {
+  background: $ink;
+  color: #ffffff;
+}
+
+// The suggestion grid: faces first, then the two buttons that write to
+// the graph. Tiles keep their height when one is busy, so the grid does
+// not reflow on a click.
+.peopleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.personTile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 16px 14px 14px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.personTileFace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 3px;
+  text-align: center;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover .personTileName {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.personTileName {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: $ink;
+}
+
+.personTileHeadline {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: $muted;
+}
+
+.personTileReason {
+  font-size: 11px;
+  line-height: 1.5;
+  color: $faint;
+}
+
+.personTileCity {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: $faint;
+}
+
+.tileIcon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.personTileActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.personList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// The one sentence that sums a rail list up. It sits under the faces rather
+// than beside the title, because the title is a question and this is the
+// answer — and it has to stay quieter than either of them.
+.viewerTotal {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: $muted;
+}
+
+.personLine {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 6px;
+  border-radius: 8px;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.personLineLink {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover .personLineName {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.personLineBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  gap: 1px;
+  min-width: 0;
+}
+
+.personLineName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink;
+}
+
+.personLineHeadline {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: $muted;
+}
+
+.personLineNote {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: $faint;
+}
+
+.personLineActions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.networkAside {
+  display: flex;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.networkAsideIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: $faint;
+}
+
+.networkAsideTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.networkAsideText {
+  margin: 0 0 10px;
+  max-width: 80ch;
+  font-size: 12px;
+  line-height: 1.7;
+  color: $muted;
+}
+
+.networkAsideLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $ink;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Public profile additions — counters, the connection foot, the lock
+// ------------------------------------------------------------------
+.heroCounts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 10px 0 0;
+
+  div {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: baseline;
+    gap: 5px;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: $ink;
+  }
+
+  dt {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $faint;
+  }
+}
+
+.heroFollowChip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $muted;
+  vertical-align: middle;
+}
+
+.heroFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 10px 24px;
+  border-top: 1px solid $line-soft;
+  font-size: 11.5px;
+
+  @media (max-width: 640px) {
+    padding-inline: 18px;
+  }
+}
+
+.heroFootNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $faint;
+}
+
+.heroFootConfirm {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: $ink;
+}
+
+.heroFootLink {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: $muted;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+  }
+}
+
+.heroFootDanger,
+.heroFootCancel {
+  min-height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+
+  @include focus-ring;
+}
+
+.heroFootDanger {
+  border: 1px solid $ink;
+  background: $ink;
+  color: #ffffff;
+
+  &:disabled {
+    cursor: progress;
+    opacity: 0.55;
+  }
+}
+
+.heroFootCancel {
+  border: 1px solid $line;
+  background: #ffffff;
+  color: $muted;
+
+  &:hover {
+    border-color: $muted;
+    color: $ink;
+  }
+}
+
+.lockCard {
+  @include surface(30px 24px);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.lockMark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 2px;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: $hover;
+}
+
+.lockIcon {
+  width: 19px;
+  height: 19px;
+  color: $ink;
+}
+
+.lockTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.lockText {
+  margin: 0;
+  max-width: 56ch;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: $muted;
+}
+
+.lockActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.lockNote {
+  font-size: 12px;
+  color: $faint;
+}
+
+.lockList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 3px 10px;
+    border: 1px solid $line;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $faint;
+  }
+}
+
+.lockRailNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: $faint;
+}
+
+.lockRailIcon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.mutualRow {
+  list-style: none;
+}
+
+.mutualLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+
+  > span:last-child {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  strong,
+  span span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  span span {
+    font-size: 11px;
+    color: $muted;
+  }
+}
+
+.profilePostList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profilePost {
+  padding: 12px 14px;
+  border: 1px solid $line-soft;
+  border-radius: 8px;
+}
+
+.profilePostBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #2b2c31;
+  white-space: pre-line;
+}
+
+.profilePostImage {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  margin-top: 10px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.profilePostMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: $faint;
+}
+
+.profilePostLink {
+  margin-left: auto;
+  color: $muted;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Home rail: the invitation banner, the graph rows, the way out
+// ------------------------------------------------------------------
+.inviteBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid $ink;
+  border-radius: 8px;
+  background: $ink;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #ffffff;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    background: #000000;
+  }
+}
+
+.inviteBannerCount {
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: $ink;
+}
+
+.inviteBannerGo {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+.railPeople {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.railPersonLink {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover .suggestionName {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.railPersonNote {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: $faint;
+}
+
+.railPersonActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.railFollowLink {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    color: $ink;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: progress;
+  }
+}
+
+.waitingFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid $line-soft;
+  font-size: 12px;
+  font-weight: 600;
+  color: $ink;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Messaging
+//
+//  Two panes in one card: the inbox keeps its own scroll, the thread keeps
+//  its own, and the composer stays at the foot of the thread whatever the
+//  height of the window. On a phone the two panes take turns instead of
+//  shrinking until neither is usable.
+// ------------------------------------------------------------------
+.messagesPage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  height: calc(100svh - 58px);
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 20px 0 20px;
+
+  @include shell-pad;
+
+  @media (max-width: 860px) {
+    height: calc(100svh - 58px);
+    padding-bottom: 12px;
+  }
+}
+
+.messenger {
+  display: grid;
+  grid-template-columns: 330px minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+
+  @media (max-width: 860px) {
+    grid-template-columns: minmax(0, 1fr);
+
+    &[data-thread="true"] .inbox {
+      display: none;
+    }
+
+    &:not([data-thread="true"]) .threadPane {
+      display: none;
+    }
+  }
+}
+
+.inbox {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  border-right: 1px solid $line;
+
+  @media (max-width: 860px) {
+    border-right: 0;
+  }
+}
+
+.inboxHead {
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid $line-soft;
+}
+
+.inboxSearch {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inboxBody {
+  min-height: 0;
+  padding: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.inboxLabel {
+  margin: 4px 8px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+.conversationList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inboxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  color: $ink;
+  text-align: left;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: $hover;
+  }
+}
+
+.inboxRowActive {
+  background: $hover;
+  box-shadow: inset 2px 0 0 $ink;
+}
+
+.inboxRowBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  gap: 1px;
+  min-width: 0;
+  font-size: 11.5px;
+  text-align: left;
+
+  strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $muted;
+  }
+}
+
+.inboxRowTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+
+  time {
+    flex-shrink: 0;
+    font-size: 10.5px;
+    color: $faint;
+  }
+}
+
+.inboxRowLast {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: $faint;
+}
+
+.unreadDot {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: $ink;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.inboxEmpty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 6px;
+  padding: 32px 18px;
+  text-align: center;
+}
+
+.inboxEmptyIcon {
+  width: 22px;
+  height: 22px;
+  color: $faint;
+}
+
+.inboxEmptyTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inboxEmptyText {
+  margin: 0 0 6px;
+  max-width: 34ch;
+  font-size: 12px;
+  line-height: 1.6;
+  color: $muted;
+}
+
+.inboxBack {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 8px;
+  border: 1px solid $line;
+  border-radius: 999px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    border-color: $muted;
+    color: $ink;
+  }
+}
+
+.threadPane {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  background: #ffffff;
+}
+
+.threadHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid $line;
+}
+
+.threadBack {
+  display: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: #ffffff;
+  color: $muted;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    border-color: $muted;
+    color: $ink;
+  }
+
+  @media (max-width: 860px) {
+    display: grid;
+  }
+}
+
+.threadBackIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.threadPerson {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover strong {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.threadIdentity {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  span {
+    font-size: 11px;
+    color: $muted;
+  }
+}
+
+.threadProfile {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $muted;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover {
+    color: $ink;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.threadScroll {
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.bubbleList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bubbleRow,
+.bubbleRowMine {
+  display: flex;
+}
+
+.bubbleRowMine {
+  justify-content: flex-end;
+}
+
+.bubble,
+.bubbleMine {
+  max-width: min(78%, 520px);
+  padding: 9px 12px;
+}
+
+.bubble {
+  border: 1px solid $line;
+  border-radius: 12px 12px 12px 4px;
+  background: #ffffff;
+}
+
+.bubbleMine {
+  border: 1px solid $ink;
+  border-radius: 12px 12px 4px 12px;
+  background: $ink;
+  color: #ffffff;
+}
+
+.bubbleBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.bubbleTime {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  text-align: right;
+  color: $faint;
+}
+
+.bubbleMine .bubbleTime {
+  color: rgba(255, 255, 255, 0.66);
+}
+
+// The seen receipt only ever sits inside your own bubble, which is ink — so
+// it borrows the timestamp's light rather than the page's dark, and stays a
+// size below both so it reads as a footnote to the message.
+.bubbleSeen {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.threadIntro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.threadIntroTitle {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.threadIntroText {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 12px;
+  line-height: 1.65;
+  color: $muted;
+}
+
+.threadComposer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid $line;
+}
+
+.threadInput {
+  flex: 1;
+  min-height: 40px;
+  max-height: 132px;
+  padding: 9px 14px;
+  border: 1px solid $line;
+  border-radius: 18px;
+  background: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  color: $ink;
+  resize: none;
+
+  @include focus-ring;
+
+  &::placeholder {
+    color: $faint;
+  }
+
+  &:focus {
+    border-color: $ink;
+  }
+}
+
+.threadSend {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid $ink;
+  border-radius: 50%;
+  background: $ink;
+  color: #ffffff;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover:not(:disabled) {
+    border-color: #000000;
+    background: #000000;
+  }
+
+  &:disabled {
+    border-color: $line;
+    background: $hover;
+    color: $faint;
+    cursor: not-allowed;
+  }
+}
+
+.threadSendIcon {
+  width: 16px;
+  height: 16px;
+}
+
+.threadEmpty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.threadEmptyMark {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid $line;
+  border-radius: 50%;
+  background: $hover;
+}
+
+.threadEmptyIcon {
+  width: 20px;
+  height: 20px;
+  color: $ink;
+}
+
+.threadEmptyTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.threadEmptyText {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: $muted;
+}
+
+// ------------------------------------------------------------------
+//  Notifications
+// ------------------------------------------------------------------
+.noticeList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notice {
+  border-top: 1px solid $line-soft;
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.noticeLink {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 4px;
+  color: inherit;
+  text-decoration: none;
+
+  @include focus-ring;
+
+  &:hover .noticeLine {
+    color: $ink;
+  }
+
+  &:hover .noticeKind {
+    color: $muted;
+  }
+}
+
+.noticeAvatar {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+}
+
+.noticeMark {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: $ink;
+  color: #ffffff;
+}
+
+.noticeMarkIcon {
+  width: 10px;
+  height: 10px;
+}
+
+.noticeBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+}
+
+.noticeLine {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: $muted;
+
+  strong {
+    font-weight: 600;
+    color: $ink;
+  }
+}
+
+.noticeExcerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  padding-left: 10px;
+  border-left: 2px solid $line;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 12px;
+  line-height: 1.55;
+  color: $muted;
+}
+
+.noticeMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: $faint;
+}
+
+.noticeKind {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: $faint;
+}
+
+.noticeDot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: $ink;
+}
+
+.noticeUnread .noticeLine {
+  color: $ink;
+}
+
+.noticeEmpty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.noticeEmptyIcon {
+  width: 24px;
+  height: 24px;
+  color: $faint;
+}
+
+.noticeEmptyTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.noticeEmptyText {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: $muted;
+}
+
+.noticeEmptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+// ------------------------------------------------------------------
+//  Mention picker (composer) and the mention left in a post
+// ------------------------------------------------------------------
+.mentionPicker {
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid $line;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(23, 23, 20, 0.1);
+}
+
+.mentionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid $line-soft;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $faint;
+
+  span {
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: $faint;
+  }
+}
+
+.mentionList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  max-height: 220px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.mentionOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  @include focus-ring;
+}
+
+.mentionOptionActive {
+  background: $hover;
+}
+
+.mentionBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  span {
+    font-size: 11px;
+    color: $muted;
+  }
+}
+
+.postMention {
+  font-weight: 600;
+  color: $ink;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(23, 23, 20, 0.25);
+
+  @include focus-ring;
+
+  &:hover {
+    border-bottom-color: $ink;
+  }
+}
+
+// ------------------------------------------------------------------
+//  Header badges
+//
+//  A count belongs to the destination, so it rides the glyph. The ring of
+//  paper is what keeps the numeral readable where it overlaps the icon.
+// ------------------------------------------------------------------
+.navIconWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navBadge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  display: grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: $ink;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strengthFill,
+  .checkGo,
+  .linkRowGo,
+  .chevron,
+  .navItem::after,
+  .profileCardGo,
+  .profileCardGo span:last-child {
+    transition: none;
+  }
+
+  .dropdown,
+  .drawer,
+  .drawerBackdrop,
+  .sheet,
+  .backdrop,
+  .menu,
+  .postFlash,
+  .newPosts {
+    animation: none;
+  }
+
+  .newDot,
+  .liveDot,
+  .skeletonLine,
+  .skeletonLineShort,
+  .skeletonHeroCover,
+  .skeletonAvatar,
+  .skeletonBar {
+    animation: none;
+    opacity: 1;
+  }
+
+  // A visitor who asked for less motion still needs to know the click
+  // landed: the icon holds at half ink instead of breathing.
+  .tabIconLoading {
+    animation: none;
+    opacity: 0.45;
+  }
+}

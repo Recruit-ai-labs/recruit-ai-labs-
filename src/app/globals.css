@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Recruit AI — design tokens
+   luxury monochrome: deep black, platinum white, graphite accents.
+   No hue — but never flat grey either. Every neutral carries a few
+   units of blue so the black reads cold-rolled and the white reads
+   like fine paper, not like a screensaver from 2009.
+
+   Tailwind v4 is configured in CSS, not in a JS config file. Every
+   token below becomes a utility: --color-paper → bg-paper / text-paper,
+   --font-display → font-display, and so on.
+------------------------------------------------------------------ */
+@theme {
+  /* Ink — four depths. One flat charcoal across six sections is what made
+     the page look dated; depth comes from steps, not from colour. */
+  --color-ink-deep: #050507; /* the deepest plates: hero, close */
+  --color-ink: #0a0a0c; /* body black */
+  --color-ink-soft: #131317; /* lifted panels, the loader curtain */
+  --color-ink-line: #26262d; /* hairline on black */
+
+  /* Paper — a clean, faintly cool white. Cream reads vintage, pure #fff
+     reads like a dashboard; this sits between the two. */
+  --color-paper: #f3f4f6;
+  --color-paper-deep: #e4e6ea;
+  --color-paper-warm: #fbfcfd; /* the brightest step, for highlights */
+
+  /* Accent — no hue at all, but a graded metal rather than two default UI
+     greys. `accent` is the graphite step (used on paper), `accent-soft` the
+     platinum step (used on ink). */
+  --color-accent: #1e1f24; /* near-black graphite: buttons, rules, emphasis */
+  --color-accent-soft: #ebedf1; /* platinum: everything light on ink */
+  --color-muted: #6c7078; /* secondary copy on paper */
+
+  /* Type stacks. The CSS vars are injected by next/font in layout.tsx,
+     with serif/sans/mono fallbacks so nothing flashes unstyled. */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Global element defaults. Kept in the base layer so every utility class
+   can still override them without !important. */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-color: var(--color-paper); /* no white flash before hydration */
+    /* The nav and footer links are in-page anchors; smooth beats jumping.
+       globals.scss switches this back to `auto` under reduced-motion. */
+    scroll-behavior: smooth;
+  }
+
+  /* Anchor jumps must clear nothing (the nav is absolute, not fixed) but
+     this keeps long sections from landing flush against the top edge. */
+  :target {
+    scroll-margin-top: 12px;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01" 1;
+    /* `clip` (not `hidden`) so the parallax/oversized video never creates a
+       scroll container — that would break position: sticky in the manifesto.
+       The first line is the fallback for engines without `clip`. */
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  /* Selecting text paints it in the graphite instead of OS blue. */
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-paper-warm);
+  }
+
+  /* Removes the inline-gap baseline under the hero video. */
+  video {
+    display: block;
+  }
+}

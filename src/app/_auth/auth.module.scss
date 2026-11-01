@@ -1,0 +1,426 @@
+// ------------------------------------------------------------------
+//  Auth pages — sign in / create account.
+//
+//  Lifted from the Recruit AI workspace shell: a white page with the form
+//  on one side and a full-bleed photograph on the other. Scoped as a CSS
+//  module so none of it leaks into the editorial landing page, and set in
+//  this site's two voices — Fraunces for the display lines, Inter for
+//  everything you touch.
+// ------------------------------------------------------------------
+$auth-ink: #171714;
+$auth-muted: #6f7078;
+
+.page {
+  min-height: 100svh;
+  background: #ffffff;
+  color: $auth-ink;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+// ---- chrome -------------------------------------------------------
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: clamp(72px, 8vh, 92px);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3.4vw, 48px);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brandRoman,
+.brandAI {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: clamp(1.15rem, 1.6vw, 1.42rem);
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+.brandAI {
+  font-style: italic;
+  color: #3c3d44;
+}
+
+.brandTm {
+  align-self: flex-start;
+  margin-top: 2px;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 7px;
+  letter-spacing: 0.12em;
+  color: $auth-muted;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: $auth-muted;
+  text-decoration: none;
+  transition:
+    color 0.25s ease,
+    gap 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    color: $auth-ink;
+    gap: 17px;
+  }
+}
+
+// ---- the two panels -----------------------------------------------
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 2.4vw, 30px);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3.4vw, 48px) clamp(36px, 6vw, 64px);
+
+  @media (min-width: 960px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(36px, 5vw, 88px);
+  }
+}
+
+.formPanel {
+  order: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 520px;
+  padding: clamp(10px, 2vh, 26px) 0 clamp(16px, 3vh, 34px);
+
+  @media (min-width: 960px) {
+    order: 1;
+    padding: 0;
+  }
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  letter-spacing: 0.01em;
+  color: $auth-muted;
+
+  &::before {
+    content: "";
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #aaaab0;
+  }
+}
+
+.title {
+  margin: 16px 0 0;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: clamp(2.35rem, 4.6vw, 3.5rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  white-space: pre-line;
+  color: $auth-ink;
+}
+
+.subtitle {
+  margin: 18px 0 0;
+  max-width: 42ch;
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: $auth-muted;
+}
+
+// ---- the panel ---------------------------------------------------
+// Clerk brings its own layout inside here (see AccessPanel.tsx for the skin),
+// so this rule only decides where the panel starts and keeps it inside the
+// form column.
+.panel {
+  width: 100%;
+  margin-top: clamp(24px, 3.4vh, 34px);
+}
+
+// ---- a session that already exists --------------------------------
+// Stands where the widget would be when the browser already carries a
+// session. Same paper, same mono labels, so it reads as part of the form.
+.session {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: clamp(24px, 3.4vh, 34px);
+  padding: 24px 22px;
+  border: 1px solid #dedfe3;
+  border-radius: 2px;
+  background: #fbfbfa;
+}
+
+.sessionLabel {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: $auth-muted;
+}
+
+.sessionText {
+  margin: 10px 0 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #3c3d44;
+
+  strong {
+    font-weight: 500;
+    color: $auth-ink;
+  }
+}
+
+.sessionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.sessionPrimary,
+.sessionGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 20px;
+  border-radius: 2px;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.sessionPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid $auth-ink;
+  background: $auth-ink;
+  color: #ffffff;
+
+  &:hover {
+    border-color: #2c2c28;
+    background: #2c2c28;
+  }
+}
+
+.sessionGhost {
+  border: 1px solid #dedfe3;
+  background: #ffffff;
+  color: $auth-ink;
+
+  &:hover {
+    border-color: #b9bac0;
+  }
+}
+
+// ---- the switch line and the small print --------------------------
+.switchText {
+  margin: clamp(20px, 2.6vh, 26px) 0 0;
+  text-align: center;
+  font-size: 13.5px;
+  color: $auth-muted;
+
+  a {
+    color: $auth-ink;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  margin-top: 22px;
+  font-size: 11.5px;
+  color: #a2a3a8;
+
+  // These are real routes now, so they need to read as links without
+  // shouting over the form.
+  a {
+    color: inherit;
+    text-decoration: none;
+    padding-bottom: 1px;
+    border-bottom: 1px solid transparent;
+    transition:
+      color 0.25s ease,
+      border-color 0.25s ease;
+
+    &:hover {
+      color: #44464d;
+      border-bottom-color: rgba(0, 0, 0, 0.26);
+    }
+  }
+}
+
+// ---- the photograph ----------------------------------------------
+.aside {
+  position: relative;
+  order: 1;
+  min-height: clamp(260px, 38vh, 380px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #101012;
+  isolation: isolate;
+
+  @media (min-width: 960px) {
+    order: 2;
+    height: 100%;
+    min-height: clamp(520px, 76svh, 760px);
+  }
+}
+
+.scenery {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scrim {
+  position: absolute;
+  inset: auto 0 0;
+  height: 68%;
+  background: linear-gradient(180deg, transparent 0%, rgba(10, 10, 12, 0.62) 100%);
+  pointer-events: none;
+}
+
+.asideTop {
+  position: absolute;
+  inset: 18px 22px auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 2;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.asideCopy {
+  position: absolute;
+  inset: auto 22px 22px;
+  z-index: 2;
+  color: #ffffff;
+}
+
+.asideTitle {
+  margin: 0;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: clamp(1.85rem, 3.1vw, 2.9rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  white-space: pre-line;
+}
+
+.asideText {
+  margin: 12px 0 0;
+  max-width: 34ch;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.asideFoot {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+// ---- configuration notice -----------------------------------------
+// Replaces the Clerk panel when the keys cannot answer on this host, so a
+// blank column becomes an instruction. Same paper, same two voices.
+.noticeWrap {
+  display: flex;
+  flex-direction: column;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: clamp(20px, 5vh, 56px) clamp(16px, 3.4vw, 48px)
+    clamp(56px, 10vh, 110px);
+}
+
+.notice {
+  margin-top: clamp(24px, 3.4vh, 34px);
+  padding: 20px 22px 22px;
+  border: 1px solid #dedfe3;
+  border-radius: 2px;
+  background: #fbfbfa;
+
+  ol {
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 8px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: #3c3d44;
+  }
+
+  code {
+    padding: 1px 5px;
+    border-radius: 2px;
+    background: #f0f0ee;
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 0.92em;
+  }
+
+  pre {
+    margin: 16px 0 0;
+    padding: 13px 14px;
+    overflow-x: auto;
+    border-radius: 2px;
+    background: #171714;
+    font-family: var(--font-jetbrains), ui-monospace, monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: #f3f3f1;
+  }
+}
+
+.noticeLabel {
+  display: block;
+  margin-bottom: 12px;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: $auth-muted;
+}

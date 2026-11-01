@@ -1,0 +1,2988 @@
+/**
+ * ============================================================================
+ *  RECRUIT AI — landing page
+ *  Everything lives in this one file: loading screen, navigation, hero
+ *  and the scroll-driven manifesto chapter that follows it.
+ *
+ *  MOTION SPLIT (kept deliberately clean so the two libraries never fight):
+ *    · anime.js      → text work. Masked line lifts, letter staggers, counters.
+ *    · framer-motion → layout + hardware-y transforms. Curtain panels, the
+ *                      plate clip, mouse parallax, scroll-linked values.
+ *    · CSS (SCSS)    → anything that loops forever. Grain, plate drift, ticker.
+ * ============================================================================
+ */
+
+"use client";
+
+// React: refs for scroll targets, state for the load → intro handshake.
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Fragment,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
+
+// framer-motion: presence (mount/unmount), motion values (parallax + scroll).
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
+
+// anime.js v4: imperative animations on DOM nodes selected by class.
+import { animate, stagger } from "animejs";
+
+// react-dom: the mobile menu is portalled out of the hero's stacking context.
+import { createPortal } from "react-dom";
+
+// next/image: the plate and the partner marks are served as AVIF/WebP at the
+// exact width the viewport asks for, instead of shipping the PNGs as drawn.
+import Image from "next/image";
+
+// next/link: every in-app route on this page goes through Link, not a plain
+// <a>. A bare <a> throws the whole document away and reloads it — full server
+// round-trip, white flash, several seconds in dev. Link navigates client-side
+// and prefetches the target's code + data the moment it enters the viewport,
+// so the click itself is instant.
+import Link from "next/link";
+
+// The route buttons above, plus a ring: PendingLink swaps a button's arrow for
+// a spinner while its own route loads, so "Create account" and "Sign In"
+// answer the click instead of waiting for the next page to arrive.
+import PendingLink, { ButtonSpinner } from "./_site/PendingLink";
+
+// Opens the DPDP consent panel from the footer's "Cookie preferences" control.
+import { openConsentPreferences } from "./_site/consent";
+
+/* ==========================================================================
+ *  1. COPY BOARD
+ *  All strings live here so the layout below stays pure structure.
+ * ========================================================================== */
+
+// Primary navigation. `meta` is the little index number next to the label;
+// `href` points at the section that actually owns that idea.
+const NAV_ITEMS = [
+  { label: "Workspace", meta: "01", href: "#platform" },
+  { label: "Shortlist", meta: "02", href: "#teams" },
+  { label: "Roles", meta: "03", href: "#talent" },
+  { label: "Method", meta: "04", href: "#method" },
+];
+
+// Status lines on the loader — one per 25% of progress. They follow the same
+// five steps the workspace walks a role through.
+const LOAD_NOTES = [
+  "Framing the role",
+  "Finding the signal",
+  "Keeping evidence",
+  "Decision in view",
+];
+
+// The stages the product moves through, running under the hero plate.
+const TICKER_WORDS = ["Source", "Evaluate", "Interview", "Verify", "Decide"];
+
+// Hero strip — the stage sequence, numbered like a running order.
+const STAGES = [
+  { no: "01", label: "Source" },
+  { no: "02", label: "Evaluate" },
+  { no: "03", label: "Interview" },
+  { no: "04", label: "Verify" },
+];
+
+// The manifesto. Split into words at render time; each word is one reveal step.
+// This is the product's whole position in one paragraph: hiring is a judgement
+// made on evidence, so the job is to keep the evidence together.
+const MANIFESTO =
+  "Hiring has always been a judgement about a person, never a keyword — yet the " +
+  "evidence behind that judgement is scattered across a dozen tools, inboxes and " +
+  "spreadsheets, so the call gets made on whichever half of the story loaded first. " +
+  "Recruit AI gathers the brief, the sourcing, the interviews and the verification " +
+  "into one workspace and keeps them beside each other, so your team reads the whole " +
+  "record together and decides with the whole picture in front of it.";
+
+// The partners shown between chapter 01 and 02. Each mark is the partner's own
+// artwork redrawn in a single ink on transparent paper by scripts/mark-logos.mjs,
+// so nothing sits behind it: no card, no tile, only the page's paper showing
+// through the counters of every letterform. The full-colour originals stay in
+// /public beside them.
+// `tag` names what kind of partner it is, `note` says what they do. `color` and
+// `rgb`/`tint` are kept as the brand's record — the redraw drops the hue, but
+// the values are what any future treatment of these marks would start from.
+// The row shows the mark and the name, nothing else; `tag`/`note` stay here as
+// copy history, so the cards can carry text again without re-researching it.
+const SUPPORTED_BY = [
+  {
+    name: "Businessgarh",
+    logo: "/supported-businessgarh-ink.png",
+    width: 900,
+    height: 900,
+    color: "#7b0f0f",
+    rgb: "123,15,15",
+    tint: "#e09a92",
+    tag: "Startup network",
+    note: "A Chhattisgarh startup network tying founders to mentors, operators and the state's emerging capital.",
+  },
+  {
+    name: "SSIPMT Raipur",
+    logo: "/supported-SSIPMT-ink.png",
+    width: 302,
+    height: 266,
+    color: "#b8912f",
+    rgb: "184,145,47",
+    tint: "#e6c47e",
+    tag: "Campus partner",
+    note: "An engineering and management campus in Raipur, running student incubators and taking design-led hiring into the classroom.",
+  },
+  {
+    name: "Raise Money",
+    logo: "/supported-raisemoney-ink.png",
+    width: 579,
+    height: 595,
+    color: "#16324f",
+    rgb: "22,50,79",
+    tint: "#9dbfdd",
+    tag: "Capital advisory",
+    note: "A fundraising desk that sharpens the deck, the model and the story before a founder ever walks into the room.",
+  },
+  {
+    name: "VSNTM Commons & Ventures",
+    logo: "/supported-vsntm-ink.png",
+    width: 470,
+    height: 161,
+    color: "#2f8f74",
+    rgb: "47,143,116",
+    tint: "#7fd0b4",
+    tag: "Venture studio",
+    note: "A venture studio backing founders across central India with the shared design, hiring and back-office muscle small teams cannot hire.",
+  },
+];
+
+// Chapter 02 — the five moves the product makes, in order. `stage` is which of
+// the four stages the step sits in, `outcome` is what it leaves behind, and
+// `glyph` picks the line icon drawn in front of the title.
+const STEPS = [
+  {
+    no: "01",
+    stage: "Source",
+    glyph: "brief",
+    label: "Brief",
+    title: "Frame the role",
+    copy: "Write down what good looks like before anyone starts searching.",
+    outcome: "One agreed brief",
+    meta: ["Scorecard", "Panel set"],
+  },
+  {
+    no: "02",
+    stage: "Source",
+    glyph: "signal",
+    label: "Signal",
+    title: "Find the signal",
+    copy: "Real people read against that brief — not job titles matched to keywords.",
+    outcome: "A pool worth reading",
+    meta: ["Role fit", "Experience", "Intent"],
+  },
+  {
+    no: "03",
+    stage: "Interview",
+    glyph: "ask",
+    label: "Context",
+    title: "Interview with context",
+    copy: "Ask the questions that matter, and keep every answer attached to the person.",
+    outcome: "Evidence, not memory",
+    meta: ["Structured", "Visible to the panel"],
+  },
+  {
+    no: "04",
+    stage: "Verify",
+    glyph: "shield",
+    label: "Records",
+    title: "Verify what matters",
+    copy: "Consent, documents and employer replies, tracked until each case closes.",
+    outcome: "A clean record",
+    meta: ["Consent", "Documents", "Replies"],
+  },
+  {
+    no: "05",
+    stage: "Decide",
+    glyph: "call",
+    label: "Decision",
+    title: "Decide together",
+    copy: "The panel compares the evidence side by side and makes the call.",
+    outcome: "A hire with a reason",
+    meta: ["Side by side", "Human decision"],
+  },
+];
+
+// The four phases the five moves are grouped under, and how many moves each
+// one owns. The rail above the pipeline is drawn from this, so the diagram
+// tells you where you are in the process and not merely which square is lit.
+const PHASES = [
+  { label: "Source", span: 2 },
+  { label: "Interview", span: 1 },
+  { label: "Verify", span: 1 },
+  { label: "Decide", span: 1 },
+];
+
+// Which phase a given move belongs to, in move order — the same grouping the
+// rail above is built from.
+const PHASE_OF = STEPS.map((step) => step.stage);
+
+// Chapter 03 — the shortlist figure, taken from the product's own example.
+// `photo` is the portrait itself, served straight out of /public.
+const CANDIDATES = [
+  { name: "Maya Rao", role: "Product systems · 8 yrs", score: 94, photo: "/maya.png" },
+  { name: "Arjun Mehta", role: "Platform design · 7 yrs", score: 91, photo: "/arjun.png" },
+  { name: "Noor Khan", role: "Research · 6 yrs", score: 89, photo: "/noor.png" },
+];
+
+// Chapter 03 — what stays attached to every recommendation. Four columns of
+// evidence, no invented metrics: these are the things the product connects.
+// `icon` reuses the <Glyph> line-icon set drawn in Chapter 02.
+const EVIDENCE = [
+  { label: "Role fit", note: "Read against the real role.", icon: "fit" },
+  { label: "Experience", note: "What they have shipped.", icon: "ship" },
+  { label: "Intent", note: "Why they are moving.", icon: "move" },
+  { label: "Verification", note: "Consent, documents, replies.", icon: "seal" },
+];
+
+// Chapter 04 — the flow, as a block diagram: what comes in, what the team
+// does with it, what is left behind. Three columns of three steps each.
+// `line` is the one sentence that saves the reader from decoding the dots in
+// `note` — every column explains itself before it starts listing.
+const FLOW = [
+  {
+    no: "01",
+    label: "Inputs",
+    caption: "What arrives",
+    line: "The brief, the people, their work — gathered before anyone is judged.",
+    blocks: [
+      { title: "The brief", note: "Role · scorecard · must-haves" },
+      { title: "People", note: "Applied · referred · sourced" },
+      { title: "Context", note: "Work · repos · notes" },
+    ],
+  },
+  {
+    no: "02",
+    label: "Workspace",
+    caption: "What the team does",
+    line: "Read, question, verify — one record, written as you go.",
+    blocks: [
+      { title: "Evaluate", note: "Scored against the brief" },
+      { title: "Interview", note: "Answers kept with the question" },
+      { title: "Verify", note: "Consent first, then documents" },
+    ],
+  },
+  {
+    no: "03",
+    label: "Outputs",
+    caption: "What you keep",
+    line: "A shortlist with reasons, a decision, and the trail behind both.",
+    blocks: [
+      { title: "Shortlist", note: "Names, each with a reason" },
+      { title: "Decision", note: "A panel view, side by side" },
+      { title: "Record", note: "Readable a year from now" },
+    ],
+  },
+];
+
+// Chapter 05 — the functions the workspace is used to hire for.
+const ROLES = [
+  "Engineering",
+  "Design",
+  "Product",
+  "Research",
+  "Data",
+  "Operations",
+  "Finance",
+];
+
+/* ==========================================================================
+ *  2. SHARED CONSTANTS
+ *  Easing curves are reused across framer + CSS so the whole page moves
+ *  with the same accent.
+ * ========================================================================== */
+
+// Heavy, cinematic curtain: slow out, slow in (used by the loader panels).
+const CURTAIN_EASE = [0.83, 0, 0.17, 1] as const;
+// Editorial expo-out: fast start, long settle (used by reveals).
+const EXPO_EASE = [0.16, 1, 0.3, 1] as const;
+
+// Scroll maths keeps needing a hard 0→1 window: a rod is either still ahead of
+// you, partly drawn, or finished.
+const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
+
+/* ==========================================================================
+ *  3. PRIMITIVES
+ * ========================================================================== */
+
+/** A 13px arrow that inherits currentColor — used in every link/button. */
+function Arrow({ size = 13 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      {/* One shaft + one chevron; strokes stay hairline-thin to match the type. */}
+      <path
+        d="M2 8h11.2M9.2 3.6 13.6 8l-4.4 4.4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/**
+ * The arrow's stand-in while a route loads: same slot, same hairline weight,
+ * same currentColor — only the shape turns. Because it replaces the arrow
+ * rather than sitting beside it, the button cannot reflow mid-click, and the
+ * label keeps carrying the meaning. The global rule in the top strip is what
+ * covers navigations no Link can see (Clerk's widget, back/forward).
+ */
+function CtaPending() {
+  return (
+    <span className="shrink-0" style={{ display: "inline-flex" }}>
+      <ButtonSpinner />
+    </span>
+  );
+}
+
+/* ==========================================================================
+ *  4. LOADING SCREEN
+ *  Four jobs, in order:
+ *    A. reveal the wordmark letter by letter (anime.js)
+ *    B. drive a counter 000 → 100 that waits for the plate (rAF + state)
+ *    C. split the screen in two and slide the halves away (framer-motion)
+ *    D. lock page scroll while it is on screen
+ * ========================================================================== */
+
+function Loader({
+  mediaReady,
+  onComplete,
+}: {
+  mediaReady: boolean;
+  onComplete: () => void;
+}) {
+  const reduce = useReducedMotion(); // respect OS "reduce motion"
+  const [progress, setProgress] = useState(0); // 0 → 100, drives the UI
+  const [exiting, setExiting] = useState(false); // flips the curtain panels
+
+  // Refs survive effect re-runs, so the ramp never restarts when
+  // `mediaReady` changes (it must feel continuous, not jumpy).
+  const startRef = useRef<number | null>(null);
+  const finishRef = useRef<number | null>(null);
+  const settledRef = useRef(false);
+
+  // ---- A. wordmark reveal -------------------------------------------------
+  // Each letter sits inside an overflow-hidden mask; anime lifts it from
+  // 118% below with a slight rotation so it reads like ink being set.
+  useEffect(() => {
+    if (reduce) return;
+
+    animate(".loader-glyph", {
+      translateY: ["118%", "0%"],
+      rotate: [7, 0],
+      opacity: [0, 1],
+      duration: 1150,
+      delay: stagger(46, { start: 180 }), // 46ms between letters, after a short beat
+      ease: "outQuart",
+    });
+  }, [reduce]);
+
+  // ---- B. the counter -----------------------------------------------------
+  // Phase 1: eased ramp to 88 across 0.9s — long enough to read as a counter,
+  // short enough that it never becomes the reason a fast page feels slow.
+  // Phase 2: once the plate image has decoded, glide 88 → 100 in 460ms and
+  // settle. If the image never arrives, the parent force-flips `mediaReady`
+  // and the same Phase 2 runs — the curtain can never hang forever.
+  useEffect(() => {
+    let frame = 0;
+
+    const tick = (now: number) => {
+      if (settledRef.current) return;
+      if (startRef.current === null) startRef.current = now;
+
+      const elapsed = now - startRef.current;
+      const ramp = Math.min(1, elapsed / 900);
+      let value = 88 * (1 - Math.pow(1 - ramp, 3)); // easeOutCubic
+
+      if (mediaReady && elapsed >= 900) {
+        if (finishRef.current === null) finishRef.current = now;
+
+        const finish = Math.min(1, (now - finishRef.current) / 460);
+        value = 88 + 12 * (1 - Math.pow(1 - finish, 2)); // easeOutQuad
+
+        // Done: freeze the loop so we stop scheduling frames.
+        if (finish >= 1) {
+          settledRef.current = true;
+          setProgress(100);
+          return;
+        }
+      }
+
+      setProgress(value);
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [mediaReady]);
+
+  const complete = progress >= 100;
+
+  // ---- C. exit choreography ----------------------------------------------
+  // 220ms pause on "100" (lets the number land), then the content fades up
+  // and the panels leave. `onComplete` fires after the panels have cleared.
+  useEffect(() => {
+    if (!complete) return;
+
+    const hold = window.setTimeout(() => setExiting(true), 220);
+    const done = window.setTimeout(onComplete, 1480);
+
+    return () => {
+      window.clearTimeout(hold);
+      window.clearTimeout(done);
+    };
+  }, [complete, onComplete]);
+
+  // ---- D. scroll lock -----------------------------------------------------
+  // Restored on unmount so the page scrolls normally afterwards.
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
+  // Which status line belongs to the current progress bucket (4 buckets).
+  const noteIndex = Math.min(
+    LOAD_NOTES.length - 1,
+    Math.floor(progress / (100 / LOAD_NOTES.length)),
+  );
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] overflow-hidden"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading Recruit AI"
+    >
+      {/* ---- curtain: two ink halves that slide apart vertically ---- */}
+      <motion.div
+        className="absolute inset-x-0 top-0 h-[50.25%] bg-ink-deep"
+        animate={exiting ? { y: "-101%" } : { y: "0%" }}
+        transition={{ duration: 1.15, ease: CURTAIN_EASE, delay: exiting ? 0.16 : 0 }}
+      />
+      <motion.div
+        className="absolute inset-x-0 bottom-0 h-[50.25%] bg-ink-deep"
+        animate={exiting ? { y: "101%" } : { y: "0%" }}
+        transition={{ duration: 1.15, ease: CURTAIN_EASE, delay: exiting ? 0.16 : 0 }}
+      />
+      {/* seam line — visible only while the panels are closed */}
+      <div className="absolute inset-x-0 top-1/2 z-[1] h-px -translate-y-1/2 bg-paper/10" />
+
+      {/* ---- everything readable, above the panels ---- */}
+      <motion.div
+        className="relative z-10 flex h-full flex-col justify-between px-[calc(var(--gutter)+8px)] py-[clamp(18px,3vh,32px)]"
+        animate={exiting ? { opacity: 0, y: -18 } : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.4, 0, 1, 1] }}
+      >
+        {/* top meta row */}
+        <div className="flex items-start justify-between gap-6">
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/45">
+            Recruit AI&trade; — Talent intelligence
+          </span>
+          <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/25 sm:block">
+            MMXXVI
+          </span>
+        </div>
+
+        {/* centre wordmark — every letter is its own mask + glyph pair */}
+        <div className="flex flex-col items-center">
+          <div className="flex font-display text-[clamp(2.35rem,11.4vw,10rem)] leading-[0.86] tracking-[-0.045em] text-paper">
+            {"RECRUIT".split("").map((letter, index) => (
+              <span
+                key={`${letter}-${index}`}
+                className="inline-block overflow-hidden pb-[0.09em]"
+              >
+                <span className="loader-glyph inline-block">{letter}</span>
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-[0.06em] flex items-baseline font-display italic text-[clamp(2rem,8.4vw,6.8rem)] leading-none tracking-[-0.03em] text-accent-soft">
+            {"AI".split("").map((letter, index) => (
+              <span
+                key={`${letter}-${index}`}
+                className="inline-block overflow-hidden pb-[0.08em]"
+              >
+                <span className="loader-glyph inline-block">{letter}</span>
+              </span>
+            ))}
+            <span className="ml-1.5 self-start font-mono text-[9px] not-italic tracking-[0.18em] text-paper/35">
+              TM
+            </span>
+          </div>
+        </div>
+
+        {/* bottom block: progress rule, status line, counter */}
+        <div className="flex flex-col gap-[clamp(13px,2.4vh,24px)]">
+          {/* 1px rule; the inner bar's width is the progress value */}
+          <div className="relative h-px w-full overflow-hidden bg-paper/12">
+            <div
+              className="absolute inset-y-0 left-0 bg-paper/75"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <div className="flex items-end justify-between gap-6">
+            <div className="flex flex-col gap-1.5">
+              <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/45">
+                {LOAD_NOTES[noteIndex]}
+              </span>
+              <span className="hidden font-mono text-[9px] uppercase tracking-[0.24em] text-paper/20 sm:block">
+                Calibrating the shortlist
+              </span>
+            </div>
+
+            {/* zero-padded, tabular so the digits never jitter */}
+            <div
+              className="flex items-baseline gap-1.5 font-display leading-none text-paper"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              <span className="text-[clamp(2.1rem,6.4vw,4.2rem)]">
+                {String(Math.round(progress)).padStart(3, "0")}
+              </span>
+              <span className="font-mono text-[10px] tracking-[0.14em] text-paper/35">
+                %
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+/* ==========================================================================
+ *  5. NAVIGATION
+ *  A fixed-height strip on the paper margin. Below `lg` the links collapse
+ *  into a clip-path panel so nothing is ever a dead button.
+ * ========================================================================== */
+
+function SiteNav({
+  intro,
+  progress,
+}: {
+  intro: boolean;
+  progress: MotionValue<number>;
+}) {
+  const [open, setOpen] = useState(false);
+
+  // The bar dissolves during the first 18% of the hero's exit, so it never
+  // sits on top of the manifesto as that section slides in.
+  const navOpacity = useTransform(progress, [0, 0.18], [1, 0]);
+
+  // …and once it is invisible it must stop swallowing taps. Without this an
+  // invisible "Menu" button floats over the manifesto on mobile.
+  const navPointer = useTransform(progress, (value) =>
+    value > 0.08 ? "none" : "auto",
+  );
+
+  // Escape closes the mobile panel — small thing, but it is expected.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Lock the page behind the panel (and restore whatever was there before).
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
+  return (
+    <>
+      {/* The bar slides down once the curtain has cleared; its opacity is
+          owned by the scroll progress above. */}
+      <motion.header
+        className="absolute inset-x-0 top-0 z-40 h-[var(--nav-h)]"
+        style={{ opacity: navOpacity, pointerEvents: navPointer }}
+        initial={{ y: -14 }}
+        animate={{ y: intro ? 0 : -14 }}
+        transition={{ duration: 0.9, ease: EXPO_EASE, delay: intro ? 0.12 : 0 }}
+      >
+        <div className="flex h-full items-center justify-between gap-6 px-[calc(var(--gutter)+6px)]">
+          {/* brand lockup: the suitcase mark, then roman "Recruit" + italic
+              accent "AI". The mark is black line art on a transparent sheet, so
+              it needs no tile behind it — the page's own paper is its field.
+              Sized off the viewport rather than `em` so it can never outgrow
+              the type it sits beside, and `priority` because the nav is painted
+              in the first frame after the curtain lifts. */}
+          <a
+            href="#top"
+            className="flex items-center gap-[clamp(6px,0.7vw,10px)]"
+            aria-label="Recruit AI — home"
+          >
+            <Image
+              src="/logo-source.png"
+              alt=""
+              width={500}
+              height={500}
+              sizes="40px"
+              priority
+              className="h-[clamp(21px,1.9vw,29px)] w-[clamp(21px,1.9vw,29px)] shrink-0"
+            />
+            <span className="flex items-baseline gap-1.5">
+              <span className="font-display text-[clamp(1.1rem,1.6vw,1.4rem)] leading-none tracking-[-0.01em] text-ink">
+                Recruit
+              </span>
+              <span className="font-display text-[clamp(1.1rem,1.6vw,1.4rem)] italic leading-none text-accent">
+                AI
+              </span>
+              <sup className="font-mono text-[7px] tracking-[0.12em] text-muted">
+                TM
+              </sup>
+            </span>
+          </a>
+
+          {/* desktop links — hidden below 1024px */}
+          <nav
+            className="hidden items-center gap-[clamp(18px,2.6vw,42px)] lg:flex"
+            aria-label="Primary"
+          >
+            {NAV_ITEMS.map((item) => (
+              <a key={item.label} href={item.href} className="nav-link">
+                {item.label}
+                <sup>{item.meta}</sup>
+              </a>
+            ))}
+          </nav>
+
+          {/* Below 1024px the bar carries the wordmark and one hamburger —
+              nothing else. The CTA and the links live inside the panel, so
+              the bar can never squeeze or clip at narrow widths. The show/hide
+              is a Sass class, not a utility — see `.nav-desk` in globals.scss. */}
+          <div className="flex items-center gap-2.5">
+            <PendingLink
+              href="/sign-up"
+              className="btn-ghost nav-desk"
+              pending={<CtaPending />}
+              swapGlyph
+            >
+              Create account
+              <Arrow size={11} />
+            </PendingLink>
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="hamburger nav-mob"
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              aria-label="Open menu"
+            >
+              <span className="hamburger__bars" aria-hidden="true">
+                <span />
+                <span />
+              </span>
+            </button>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* ---- mobile panel -----------------------------------------------------
+       * Portalled to <body> on purpose: the hero is a sticky z-0 stacking
+       * context, so a fixed panel rendered inside it gets painted UNDER the
+       * manifesto (z-20) — that is what was cutting the menu in half.
+       * It owns its scroll container, respects the notch via env(), and keeps
+       * the CTA within thumb reach at the bottom. */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                id="mobile-menu"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menu"
+                className="fixed inset-0 z-[130] flex flex-col overflow-y-auto overscroll-contain bg-paper px-[calc(var(--gutter)+10px)] pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))]"
+                initial={{ clipPath: "inset(0% 0% 100% 0%)" }}
+                animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
+                exit={{ clipPath: "inset(0% 0% 100% 0%)" }}
+                transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}
+              >
+                <div className="flex shrink-0 items-center justify-between">
+                  <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted">
+                    Index
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(false)}
+                    className="btn-ghost"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {/* links arrive one after another, 55ms apart */}
+                <nav
+                  className="mt-[clamp(22px,6vh,48px)] flex flex-col"
+                  aria-label="Mobile"
+                >
+                  {NAV_ITEMS.map((item, index) => (
+                    <motion.a
+                      key={item.label}
+                      href={item.href}
+                      className="mobile-menu-link"
+                      onClick={() => setOpen(false)}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: 0.14 + index * 0.055,
+                        duration: 0.65,
+                        ease: EXPO_EASE,
+                      }}
+                    >
+                      {item.label}
+                      <span>{item.meta}</span>
+                    </motion.a>
+                  ))}
+                </nav>
+
+                {/* pinned to the bottom; full-width tap target on phones */}
+                <div className="mt-auto flex flex-wrap items-end justify-between gap-4 pt-[clamp(26px,7vh,56px)]">
+                  <PendingLink
+                    href="/sign-up"
+                    className="btn-ink w-full justify-center sm:w-auto"
+                    pending={<CtaPending />}
+                    swapGlyph
+                  >
+                    Create account
+                    <Arrow size={11} />
+                  </PendingLink>
+                  <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted">
+                    Est. 2026
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body,
+        )}
+    </>
+  );
+}
+
+/* ==========================================================================
+ *  6. SCROLL-DRIVEN MANIFESTO  (chapter 01)
+ *
+ *  How it works:
+ *    · `useScroll` watches the text column and returns a 0 → 1 progress
+ *      value across the offset window ["start 0.8", "end 0.6"] — i.e. the
+ *      reading zone, not the whole document.
+ *    · Every word owns a slice of that progress. As the slice passes, the
+ *      word's colour walks from grey to ink and it lifts 6px.
+ *    · The sticky left rail then has two scroll-linked extras: the numeral
+ *      drifts on parallax, and the accent rule fills from the top.
+ * ========================================================================== */
+
+/** One word of the manifesto. Owns its own slice of the scroll progress. */
+function RevealWord({
+  word,
+  progress,
+  range,
+  still,
+}: {
+  word: string;
+  progress: MotionValue<number>;
+  range: [number, number];
+  still: boolean;
+}) {
+  // Colour is the star; opacity only softens the far-away words.
+  const color = useTransform(progress, range, ["#b1b5bd", "#0a0a0c"]);
+  const opacity = useTransform(progress, range, [0.55, 1]);
+  const y = useTransform(progress, range, [6, 0]);
+
+  return (
+    // The outer span owns the trailing space so words never collide.
+    <span className="mr-[0.26em] inline-block">
+      {still ? (
+        // Reduced-motion: ink, no transforms, same line-breaking.
+        <span className="inline-block text-ink">{word}</span>
+      ) : (
+        <motion.span style={{ color, opacity, y }} className="inline-block">
+          {word}
+        </motion.span>
+      )}
+    </span>
+  );
+}
+
+function Manifesto() {
+  const reduce = useReducedMotion();
+  const textRef = useRef<HTMLHeadingElement | null>(null);
+
+  // Progress through the reading zone: starts when the column's top hits
+  // 80% of the viewport, ends when its bottom reaches 60%.
+  const { scrollYProgress } = useScroll({
+    target: textRef,
+    offset: ["start 0.8", "end 0.6"],
+  });
+
+  // Two decorative uses of the same value: parallax + a filling rule.
+  const numeralY = useTransform(scrollYProgress, [0, 1], [50, -50]);
+  const ruleScale = useTransform(scrollYProgress, [0, 1], [0.02, 1]);
+
+  // Words are stable between renders — split once.
+  const words = useMemo(() => MANIFESTO.split(" "), []);
+
+  // Each word gets 3 word-widths of travel, so a small wave of words is
+  // always mid-transition instead of flipping one by one.
+  const step = 1 / words.length;
+
+  return (
+    <section
+      id="method"
+      className="relative z-20 -mt-[6svh] surface-paper px-[var(--gutter)] pb-[clamp(56px,10vh,128px)] pt-[clamp(28px,5vh,56px)] text-ink md:-mt-[10svh]"
+      aria-labelledby="manifesto-heading"
+    >
+      {/* top hairline + chapter row */}
+      <div className="flex items-center justify-between border-t border-ink/15 pb-[clamp(24px,5vh,56px)] pt-4">
+        <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted">
+          Chapter 01 — Why it works
+        </span>
+        <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted/70 md:block">
+          Scroll to read ↓
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-[clamp(20px,4vw,56px)] lg:grid-cols-12">
+        {/* ---------- left rail: sticky on desktop, plain header on mobile ---------- */}
+        <aside className="lg:col-span-3 lg:sticky lg:top-[clamp(20px,8vh,72px)] lg:self-start">
+          <div className="flex items-baseline gap-3">
+            {/* the numeral is the anchor of the chapter — big, italic, faint */}
+            <motion.span
+              className="block font-display text-[clamp(3.2rem,7vw,5.4rem)] italic leading-[0.8] tracking-[-0.05em] text-ink/12 lg:text-[clamp(4rem,6.5vw,7rem)]"
+              style={{ y: numeralY }}
+            >
+              01
+            </motion.span>
+            <span className="font-mono text-[9.5px] uppercase leading-[1.5] tracking-[0.22em] text-muted">
+              People
+              <br />
+              over keywords
+            </span>
+          </div>
+
+          {/* vertical progress rule — fills as the statement is read */}
+          <div className="mt-8 hidden h-[clamp(120px,20vh,200px)] w-px bg-ink/12 lg:block">
+            <motion.div
+              className="h-full w-px origin-top bg-accent"
+              style={{ scaleY: ruleScale }}
+            />
+          </div>
+
+          <p className="mt-6 hidden max-w-[24ch] text-[12px] leading-[1.6] text-muted lg:block">
+            What the workspace is for: know the person, then make the call.
+          </p>
+        </aside>
+
+        {/* ---------- right: the statement ---------- */}
+        <div className="lg:col-span-9">
+          <h2
+            id="manifesto-heading"
+            ref={textRef}
+            className="font-display text-[clamp(1.55rem,4.1vw,3.5rem)] font-normal leading-[1.14] tracking-[-0.025em]"
+          >
+            {/* one <RevealWord> per word, each bound to its own progress slice */}
+            {words.map((word, index) => (
+              <RevealWord
+                key={`${word}-${index}`}
+                word={word}
+                progress={scrollYProgress}
+                range={[index * step, index * step + step * 3]}
+                still={!!reduce}
+              />
+            ))}
+          </h2>
+
+          {/* supporting note + link, revealed as a plain block */}
+          <div className="mt-[clamp(32px,5vw,64px)] grid grid-cols-1 gap-8 border-t border-ink/15 pt-8 sm:grid-cols-2">
+            <p className="max-w-[42ch] text-[clamp(0.85rem,1.05vw,0.95rem)] leading-[1.7] text-muted">
+              Recruit AI does not decide for you. It keeps the brief, the
+              evidence and the interviews together, and asks better questions.
+              The call stays human.
+            </p>
+
+            <div className="flex flex-col items-start gap-5 sm:items-end">
+              <a
+                href="#platform"
+                className="group inline-flex items-center gap-2 border-b border-ink/25 pb-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-ink transition-colors hover:border-accent hover:text-accent"
+              >
+                See the workspace
+                <span
+                  aria-hidden="true"
+                  className="transition-transform duration-300 group-hover:translate-x-1"
+                >
+                  →
+                </span>
+              </a>
+              <span className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted/70">
+                Chapter 01 / 06
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ==========================================================================
+ *  7b. SUPPORTED BY — the partners, held between chapter 01 and 02.
+ *  A heading across the top, then four marks and four names — no card, no
+ *  tile, nothing behind the artwork at all. The knock-outs are drawn once by
+ *  scripts/mark-logos.mjs in the site's own ink, so the paper shows through
+ *  every counter and the row reads as a printed partner wall rather than four
+ *  coloured badges.
+ *  Motion split, as everywhere else in the document:
+ *    · framer-motion → the scroll-linked reveal. Each mark owns a slice of its
+ *                      own progress (BackerCard), so the row rises and settles
+ *                      as it travels, rather than firing once and freezing;
+ *                      the rule above the row draws with the section's progress.
+ *  Under reduced-motion the marks simply sit there, fully readable.
+ * ========================================================================== */
+
+/** One partner. Owns the scroll progress of its own slice of the row. */
+function BackerCard({ org }: { org: (typeof SUPPORTED_BY)[number] }) {
+  const reduce = useReducedMotion();
+  const ref = useRef<HTMLLIElement | null>(null);
+
+  // Starts as the card's top reaches the bottom tenth of the viewport and
+  // settles once it is a little above the middle, so the row reveals with
+  // the scroll instead of stamping in all at once.
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.95", "start 0.55"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], [72, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.65], [0, 1]);
+  const scale = useTransform(scrollYProgress, [0, 1], [0.965, 1]);
+  // the mark drifts inside its field as the card passes — a hint of depth
+  const markY = useTransform(scrollYProgress, [0, 1], [14, -14]);
+
+  const brand = {
+    "--brand": org.color,
+    "--brand-rgb": org.rgb,
+    "--brand-tint": org.tint,
+  } as CSSProperties;
+
+  return (
+    <motion.li
+      ref={ref}
+      className="backer-card"
+      style={reduce ? brand : { ...brand, y, opacity, scale }}
+    >
+      <div className="backer-card__well">
+        <motion.div
+          className="backer-card__mark"
+          style={reduce ? undefined : { y: markY }}
+        >
+          {/* the name is set underneath, so the image is decoration. next/image
+              keeps the mark sharp at whatever height the wall fixes, and hands
+              back WebP/AVIF in place of the 68 KB PNG. */}
+          <Image
+            src={org.logo}
+            alt=""
+            width={org.width}
+            height={org.height}
+            sizes="(min-width: 1024px) 420px, 60vw"
+            className="backer-card__logo"
+          />
+        </motion.div>
+      </div>
+
+      <span className="backer-card__name">{org.name}</span>
+    </motion.li>
+  );
+}
+
+function SupportedBy() {
+  const reduce = useReducedMotion();
+  const figureRef = useRef<HTMLDivElement | null>(null);
+
+  // One shared value for the figure: it drives the rule that is drawn above
+  // the row as the partners come up. The cards read their own progress.
+  const { scrollYProgress } = useScroll({
+    target: figureRef,
+    offset: ["start 0.9", "end 0.65"],
+  });
+  const ruleScale = useTransform(scrollYProgress, [0, 0.55], [0, 1]);
+
+  return (
+    <section
+      aria-label="Supported by"
+      className="relative surface-paper px-[var(--gutter)] pb-[clamp(64px,12vh,150px)] pt-[clamp(52px,9vh,112px)] text-ink"
+    >
+      <div className="mx-auto max-w-[1180px]">
+        {/* chapter rule — the same grammar as chapters 01–06 */}
+        <div className="flex items-baseline justify-between border-t border-ink/15 pt-4">
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted">
+            Chapter 01 — Supported by
+          </span>
+          <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted md:block">
+            Fig. 01b
+          </span>
+        </div>
+
+        {/* the heading, held above every card */}
+        <div className="flex flex-col gap-6 pb-[clamp(28px,3.6vw,48px)] pt-[clamp(30px,5vh,58px)] lg:flex-row lg:items-end lg:justify-between">
+          <motion.h2
+            initial={reduce ? false : { opacity: 0, y: 26 }}
+            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.6 }}
+            transition={{ duration: 0.95, ease: EXPO_EASE }}
+            className="font-display text-[clamp(2.4rem,6.2vw,5.2rem)] leading-[0.94] tracking-[-0.04em]"
+          >
+            Supported{" "}
+            <span className="italic text-accent">by.</span>
+          </motion.h2>
+          <p className="max-w-[44ch] text-[clamp(0.9rem,1.05vw,1rem)] leading-[1.7] text-muted lg:pb-2 lg:text-right">
+            The incubators, campuses and funds standing behind the work — and
+            putting judgement back at the centre of how teams get built.
+          </p>
+        </div>
+
+        <div ref={figureRef}>
+          {/* a hairline that is drawn as the figure comes into view */}
+          <div className="relative h-px w-full bg-ink/15">
+            <motion.span
+              aria-hidden="true"
+              style={{ scaleX: reduce ? 1 : ruleScale }}
+              className="absolute inset-0 origin-left bg-ink/50"
+            />
+          </div>
+
+          <ul className="backers-cards mt-[clamp(20px,3vw,34px)]">
+            {SUPPORTED_BY.map((org) => (
+              <BackerCard key={org.name} org={org} />
+            ))}
+          </ul>
+        </div>
+
+        {/* figure caption, in the document's micro-type */}
+        <div className="mt-4 flex items-center justify-between border-t border-ink/10 pt-3 font-mono text-[8.5px] uppercase tracking-[0.2em] text-muted/80">
+          <span>Fig. 01b — Backers</span>
+          <span>{SUPPORTED_BY.length} partners, one standard</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ==========================================================================
+ *  8. CHAPTER 02 — METHOD
+ *
+ *  A pinned technical figure: a plate with registration marks and a figure
+ *  number, a rail naming the four phases, and five chips standing on an axis
+ *  that leans away from the reader. The stage pins and the scroll travels the
+ *  axis: the head chip inverts to paper and lifts toward the lens, the wire
+ *  goes from dashed to solid behind it, a marker runs along the axis to it, and
+ *  the move is written out in the note beside the figure — word by word, joined
+ *  to the diagram by a leader line. Nothing is hidden behind a hover; the
+ *  sentences arrive one move at a time as you travel. Clicking a chip scrolls
+ *  the stage to it.
+ *
+ *  Motion split, kept honest:
+ *    · framer-motion → the axis tilt and each chip's depth/height/scale.
+ *                      These are continuous functions of scroll, so they need
+ *                      MotionValues — see Method3DNode.
+ *    · anime.js      → the one-shots: the plate being drawn (marks, surface,
+ *                      rail, chips, wire), the stamp of a chip taking the head,
+ *                      the ring, and the note being written.
+ *    · CSS (SCSS)    → what loops forever (the drifting surface, the breathing
+ *                      ruler head) plus every resting state, so the chapter is
+ *                      still readable with JavaScript switched off.
+ *  The three never touch the same element's transform.
+ * ========================================================================== */
+
+// Five hairline line-icons, one per move. Drawn inline so they inherit the
+// current colour, cost nothing to load and stay in the page's grey scale.
+function Glyph({ name }: { name: string }) {
+  const line = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.1,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  return (
+    <svg viewBox="0 0 20 20" className="h-[17px] w-[17px]" aria-hidden="true">
+      {name === "brief" && (
+        <g {...line}>
+          <path d="M4.5 3h11v14h-11z" />
+          <path d="M7.3 6.8h5.4M7.3 10h5.4M7.3 13.2h3" />
+        </g>
+      )}
+      {name === "signal" && (
+        <g {...line}>
+          <circle cx="9" cy="9" r="5.2" />
+          <path d="M12.9 12.9 16.6 16.6" />
+        </g>
+      )}
+      {name === "ask" && (
+        <g {...line}>
+          <path d="M3.2 4.4h13.6v8.8H9.4l-3.6 2.8v-2.8H3.2z" />
+          <path d="M6.6 8.8h6.8" />
+        </g>
+      )}
+      {name === "shield" && (
+        <g {...line}>
+          <path d="M10 2.6l5.8 1.9v4.9c0 3.4-2.3 5.5-5.8 6.7-3.5-1.2-5.8-3.3-5.8-6.7V4.5z" />
+          <path d="M7.5 9.9l1.9 1.9 3.4-3.6" />
+        </g>
+      )}
+      {name === "call" && (
+        <g {...line}>
+          <path d="M5 17.2V3.2M5 3.8h9.6l-2.2 3.1 2.2 3.1H5" />
+          <path d="M5 17.2h3.4" />
+        </g>
+      )}
+      {/* ---- evidence column icons, Chapter 03 ---- */}
+      {name === "fit" && (
+        <g {...line}>
+          <circle cx="10" cy="10" r="6.6" />
+          <circle cx="10" cy="10" r="2.6" />
+          <path d="M10 1.6v2.4M10 16v2.4M1.6 10h2.4M16 10h2.4" />
+        </g>
+      )}
+      {name === "ship" && (
+        <g {...line}>
+          <path d="M10 3 16.4 6.4 10 9.8 3.6 6.4z" />
+          <path d="M3.6 10.6 10 14l6.4-3.4" />
+          <path d="M3.6 14.2 10 17.6l6.4-3.4" />
+        </g>
+      )}
+      {name === "move" && (
+        <g {...line}>
+          <path d="M4.2 15.8 15.8 4.2" />
+          <path d="M9.6 4.2h6.2v6.2" />
+          <path d="M4.2 9.6v6.2h6.2" />
+        </g>
+      )}
+      {name === "seal" && (
+        <g {...line}>
+          <circle cx="10" cy="8.4" r="5.1" />
+          <path d="M7.7 12.4 6.4 18l3.6-1.8L13.6 18l-1.3-5.6" />
+          <path d="M8.3 8.4h3.4" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// One square of the axis, standing between two chips.
+// Its fill is a continuous function of the scroll, so the wire is drawn at
+// exactly the rate you travel instead of being switched on when a square
+// lights up — the difference between a diagram being travelled and a class
+// being toggled. framer owns this inner bar; anime.js owns the rod AROUND it
+// (the boot trace), which is why they are two elements and not one.
+function Method3DRod({
+  order,
+  progress,
+  still,
+}: {
+  order: number; // the rod sits between `order` and `order + 1`
+  progress: MotionValue<number>;
+  still: boolean;
+}) {
+  const fill = useTransform(progress, (v) => {
+    if (still) return 1;
+    // The stroke happens over the last third of the approach to the next node
+    // and finishes exactly as that chip takes the head.
+    return clamp01((v * (STEPS.length - 1) - order + 0.62) / 1.62);
+  });
+
+  return (
+    <span
+      className="method3d__rod"
+      // one column-width plus the gaps before it — the same arithmetic the
+      // grid uses, so the rod always lands in the gap between two chips
+      style={{
+        left: `calc(var(--m-col) * ${order + 1} + var(--m-gap) * ${order})`,
+      }}
+    >
+      <motion.span className="method3d__rodlit" style={{ scaleX: fill }} />
+    </span>
+  );
+}
+
+// One chip standing on the tilted axis. framer-motion owns the cell's depth
+// (`z`, `y`, opacity, scale — all scroll-linked, so they need MotionValues) and
+// anime.js owns the chip INSIDE it (the boot drop, the stamp, the ring). They
+// are deliberately different elements: anime leaves an inline `transform`
+// behind, and that would silently win over anything framer writes.
+function Method3DNode({
+  step,
+  order,
+  progress,
+  active,
+  past,
+  still,
+  onSelect,
+}: {
+  step: (typeof STEPS)[number];
+  order: number;
+  progress: MotionValue<number>;
+  active: boolean;
+  past: boolean;
+  still: boolean;
+  onSelect: (order: number) => void;
+}) {
+  // The head of the pipeline travels 0 → 4 with the scroll. Distance from the
+  // head decides how far forward a chip sits, how much of it is lit and how
+  // large it is — an eased falloff, so the leader clearly leads instead of the
+  // row simply getting wider by one step at a time.
+  const depth = useTransform(progress, (v) => {
+    if (still) return 0;
+    const d = Math.abs(order - v * (STEPS.length - 1));
+    return Math.max(-120, 58 - 30 * Math.pow(d, 1.12));
+  });
+  const brightness = useTransform(progress, (v) => {
+    if (still) return 1;
+    const d = Math.abs(order - v * (STEPS.length - 1));
+    return Math.max(0.3, 1 - 0.26 * Math.pow(d, 0.82));
+  });
+  const size = useTransform(progress, (v) => {
+    if (still) return 1;
+    const d = Math.abs(order - v * (STEPS.length - 1));
+    return Math.max(0.88, 1.075 - 0.075 * Math.pow(d, 1.05));
+  });
+  // …and the leader lifts a few points off the surface, which is what the
+  // contact shadow under it needs in order to read as standing on something.
+  const rise = useTransform(progress, (v) => {
+    if (still) return 0;
+    const d = Math.abs(order - v * (STEPS.length - 1));
+    return -13 * Math.max(0, 1 - d);
+  });
+  // The head also turns back toward the lens: the board is tipping away from
+  // the reader the whole time, so the chip in charge counter-rotates a few
+  // degrees to face you. Everything behind it stays flush with the surface.
+  const near = useTransform(progress, (v) => {
+    if (still) return 0;
+    return Math.max(0, 1 - Math.abs(order - v * (STEPS.length - 1)));
+  });
+  const yaw = useTransform(near, (n) => 9 * n);
+  const pitch = useTransform(near, (n) => -5 * n);
+
+  return (
+    <li className="method3d__cell">
+      <motion.div
+        className="method3d__lift"
+        style={{
+          z: depth,
+          y: rise,
+          opacity: brightness,
+          scale: size,
+          rotateY: yaw,
+          rotateX: pitch,
+        }}
+      >
+        {/* a button, so the pipeline is walkable by keyboard and by thumb: it
+            scrolls the stage to this move rather than just painting it */}
+        <button
+          type="button"
+          onClick={() => onSelect(order)}
+          aria-current={active ? "step" : undefined}
+          className={`method3d__chip${active ? " method3d__chip--on" : past ? " method3d__chip--past" : ""}`}
+        >
+          {/* the rings anime.js fires when this move takes the head — one fast,
+              one a beat behind, so the pass reads as struck twice */}
+          <span className="method3d__ripple" aria-hidden="true" />
+          <span
+            className="method3d__ripple method3d__ripple--slow"
+            aria-hidden="true"
+          />
+          {/* the cut corner, drawn as a hairline so the chip looks stamped
+              rather than rounded by a component library */}
+          <span className="method3d__cut" aria-hidden="true" />
+          {/* the sweep: a single hairline that crosses the face of the chip as
+              it takes the head, like a stylus passing over the plate */}
+          <span className="method3d__sweep" aria-hidden="true" />
+
+          <span className="flex items-start justify-between gap-2">
+            <span className="method3d__no">{step.no}</span>
+            <span className="method3d__icon">
+              <Glyph name={step.glyph} />
+            </span>
+          </span>
+
+          <span className="method3d__label">{step.label}</span>
+          <span className="method3d__phase">{step.stage}</span>
+        </button>
+      </motion.div>
+    </li>
+  );
+}
+
+function Method() {
+  const reduce = useReducedMotion();
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const sceneRef = useRef<HTMLDivElement | null>(null);
+  const readoutRef = useRef<HTMLDivElement | null>(null);
+  const floorRef = useRef<HTMLSpanElement | null>(null);
+  const tokenRef = useRef<HTMLSpanElement | null>(null);
+  const ghostRef = useRef<HTMLSpanElement | null>(null);
+  const bootedRef = useRef(false);
+  const readyRef = useRef(false);
+  const prevIndexRef = useRef(0);
+
+  // Without React there is nothing to run the boot pass, so the board must
+  // simply be drawn. The pre-hide is only armed once the component is alive —
+  // which also means a reduced-motion visitor never sees it.
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    setArmed(true);
+  }, []);
+
+  // One pinned stage: the board holds still while the scroll writes the
+  // pipeline. The wrapper's height IS the travel — roughly two thirds of a
+  // screen per move, so a node can never be skipped over.
+  const { scrollYProgress } = useScroll({
+    target: wrapRef,
+    offset: ["start start", "end end"],
+  });
+  // A soft spring rather than a lively one: the board should arrive like a
+  // heavy object settling into place — one long tail, no bounce you could
+  // blame on the mouse wheel.
+  const travel = useSpring(scrollYProgress, {
+    stiffness: 62,
+    damping: 24,
+    mass: 0.6,
+  });
+
+  // Which move is at the head of the pipeline. Rounding means a square takes
+  // the head the moment the scroll passes its halfway mark.
+  const [index, setIndex] = useState(0);
+  const step = STEPS[index];
+
+  useMotionValueEvent(travel, "change", (v) => {
+    const head = Math.round(v * (STEPS.length - 1));
+    setIndex((prev) => (prev === head ? prev : head));
+  });
+
+  // Four more things the same scroll value drives. The board starts steep and
+  // flat and ends nearly upright, close to the lens: a dolly along the axis
+  // rather than a rotation in place. It drifts sideways against that tip so the
+  // change reads as a camera move, and runs a marker along the wire.
+  const tiltX = useTransform(travel, [0, 1], [22, 3]);
+  const tiltY = useTransform(travel, [0, 1], [-11, 4]);
+  const panX = useTransform(travel, [0, 1], [-16, 20]);
+  const boardScale = useTransform(travel, [0, 1], [0.92, 1.055]);
+  const boardZ = useTransform(travel, [0, 1], [-90, 26]);
+  // The marker rides the axis from node centre to node centre. A linear 0→100%
+  // would slide past the chips like a progress bar; easing WITHIN each gap makes
+  // it settle on a square, hold, then dart — a mechanism being indexed.
+  const tokenLeft = useTransform(travel, (v) => {
+    const t = clamp01(v) * (STEPS.length - 1);
+    const cell = Math.floor(t);
+    const f = t - cell;
+    const eased = f < 0.5 ? 2 * f * f : 1 - Math.pow(1 - f, 2) / 2;
+    return `calc(var(--m-col) * 0.5 + ${(cell + eased).toFixed(4)} * (var(--m-col) + var(--m-gap)))`;
+  });
+  // …and the figure number behind the board travels at its own rate. Two layers
+  // of one plate moving differently is what makes a flat screen read as space.
+  const ghostDrift = useTransform(travel, (v) => `${-7 + v * 14}%`);
+
+  // ---- A. the boot ------------------------------------------------------
+  // The plate is drawn in the order a draughtsman would draw it: the frame and
+  // its registration marks, the surface, the phase rail, the chips onto the
+  // axis, the wire between them, and only then the marker. Once only, fired
+  // when the stage is comfortably on screen.
+  const seen = useInView(sceneRef, { once: true, amount: 0.3 });
+
+  useEffect(() => {
+    if (!seen || reduce || bootedRef.current) return;
+    const scene = sceneRef.current;
+    if (!scene) return;
+    bootedRef.current = true;
+
+    const query = (selector: string) =>
+      Array.from(scene.querySelectorAll(selector));
+
+    // The chapter itself arrives first — two lines climbed out of masks, then
+    // the supporting line. A plate that draws itself while its own title is
+    // still static looks like a widget; both arriving is what reads as a page.
+    animate(query(".method3d__h2line"), {
+      translateY: ["108%", "0%"],
+      opacity: [0, 1],
+      duration: 1000,
+      delay: stagger(130, { start: 40 }),
+      ease: "outExpo",
+    });
+
+    animate(query(".method3d__intro"), {
+      opacity: [0, 1],
+      translateY: [12, 0],
+      duration: 760,
+      delay: 430,
+      ease: "outQuart",
+    });
+
+    // the figure number swells up behind everything and settles
+    if (ghostRef.current) {
+      animate(ghostRef.current, {
+        opacity: [0, 1],
+        scale: [1.14, 1],
+        duration: 1700,
+        delay: 90,
+        ease: "outExpo",
+      });
+    }
+
+    animate(query(".method3d__mark"), {
+      opacity: [0, 1],
+      scale: [0.5, 1],
+      duration: 640,
+      delay: stagger(55),
+      ease: "outExpo",
+    });
+
+    if (floorRef.current) {
+      animate(floorRef.current, {
+        opacity: [0, 0.5],
+        translateZ: [-70, -34],
+        duration: 1200,
+        delay: 120,
+        ease: "outExpo",
+      });
+    }
+
+    // the rail: hairlines wipe out to the right, labels lift under them
+    animate(query(".method3d__segline"), {
+      scaleX: [0, 1],
+      opacity: [0, 1],
+      duration: 760,
+      delay: stagger(90, { start: 220 }),
+      ease: "outExpo",
+    });
+
+    animate(query(".method3d__seglabel"), {
+      opacity: [0, 1],
+      translateY: [9, 0],
+      duration: 560,
+      delay: stagger(90, { start: 300 }),
+      ease: "outQuart",
+    });
+
+    // the chips drop onto the axis one after another
+    animate(query(".method3d__chip"), {
+      translateY: [44, 0],
+      scale: [0.86, 1],
+      rotateZ: [-2.4, 0],
+      opacity: [0, 1],
+      duration: 1000,
+      delay: stagger(120, { start: 420 }),
+      ease: "outExpo",
+    });
+
+    // the wire draws between the chips that already stand — a path being
+    // traced, not a line being switched on
+    animate(query(".method3d__rod"), {
+      scaleX: [0, 1],
+      opacity: [0, 1],
+      duration: 560,
+      delay: stagger(115, { start: 880 }),
+      ease: "outQuart",
+    });
+
+    if (tokenRef.current) {
+      animate(tokenRef.current, {
+        opacity: [0, 1],
+        scale: [0.2, 1],
+        duration: 700,
+        delay: 1360,
+        ease: "outExpo",
+      });
+    }
+
+    const ring = query(".method3d__chip")[0]?.querySelector(".method3d__ripple");
+    if (ring) {
+      animate(ring, {
+        opacity: [0.75, 0],
+        scale: [0.72, 1.5],
+        duration: 800,
+        delay: 1200,
+        ease: "outQuart",
+      });
+    }
+
+    // The handoff pass writes the very chips the boot just wrote, so it waits
+    // for the plate to be drawn; the note is not under that lock.
+    const unlock = window.setTimeout(() => {
+      readyRef.current = true;
+    }, 2200);
+    return () => window.clearTimeout(unlock);
+  }, [seen, reduce]);
+
+  // ---- B. the handoff of each move --------------------------------------
+  // Two chips take part: the one handing over steps back and dims, the one
+  // taking the head stamps in slightly oversize and settles. The note is then
+  // rewritten rather than swapped — leader drawn, number slid in, title lifted
+  // out of its masks word by word, then the copy and what it leaves behind.
+  useEffect(() => {
+    if (reduce) return;
+    const scene = sceneRef.current;
+    const chips = scene
+      ? Array.from(scene.querySelectorAll<HTMLElement>(".method3d__chip"))
+      : [];
+    const previous = prevIndexRef.current;
+    // direction-aware, so travelling back through the pipeline moves everything
+    // the other way instead of replaying one fixed gesture
+    const dir = index >= previous ? 1 : -1;
+    const locked = !readyRef.current;
+    prevIndexRef.current = index;
+
+    if (!locked) {
+      if (previous !== index && chips[previous]) {
+        animate(chips[previous], {
+          scale: 0.95,
+          opacity: 0.66,
+          duration: 420,
+          ease: "outQuart",
+        });
+      }
+
+      const chip = chips[index];
+      if (chip) {
+        animate(chip, {
+          scale: [1.075, 1],
+          rotateZ: [-1.6 * dir, 0],
+          opacity: [0.7, 1],
+          duration: 760,
+          ease: "outExpo",
+        });
+      }
+
+      const ring = chip?.querySelector(".method3d__ripple");
+      if (ring) {
+        animate(ring, {
+          opacity: [0.8, 0],
+          scale: [0.68, 1.45],
+          rotate: [-4 * dir, 4 * dir],
+          duration: 760,
+          ease: "outQuart",
+        });
+      }
+
+      // …and a second ring a beat later, so the pass is struck twice instead of
+      // flashing once like a CSS transition
+      const ringSlow = chip?.querySelector(".method3d__ripple--slow");
+      if (ringSlow) {
+        animate(ringSlow, {
+          opacity: [0.5, 0],
+          scale: [0.82, 1.72],
+          rotate: [3 * dir, -3 * dir],
+          duration: 1050,
+          delay: 130,
+          ease: "outExpo",
+        });
+      }
+
+      // a hairline crossing the face of the new head — the plate being read by
+      // a stylus, not a card being highlighted
+      const sweep = chip?.querySelector(".method3d__sweep");
+      if (sweep) {
+        animate(sweep, {
+          translateX: ["-116%", "116%"],
+          opacity: [0.9, 0],
+          duration: 900,
+          delay: 60,
+          ease: "inOutQuart",
+        });
+      }
+
+      // the move's glyph is inscribed rather than switched on. Each stroke is
+      // measured, dashed to its own length and then drawn — the small piece of
+      // the figure that no component library bothers with.
+      if (chip) {
+        Array.from(
+          chip.querySelectorAll<SVGGeometryElement>(
+            ".method3d__icon path, .method3d__icon circle",
+          ),
+        ).forEach((shape, k) => {
+          const len = shape.getTotalLength();
+          if (!len) return;
+          shape.style.strokeDasharray = `${len}`;
+          animate(shape, {
+            strokeDashoffset: [len, 0],
+            duration: 540,
+            delay: 80 + k * 90,
+            ease: "outQuart",
+          });
+        });
+      }
+
+      // the marker hiccups as the head changes hands, so the wire acknowledges
+      // the pass instead of sliding past it
+      if (tokenRef.current) {
+        animate(tokenRef.current, {
+          scale: [2.1, 1],
+          duration: 640,
+          ease: "outExpo",
+        });
+      }
+
+      // the figure number rolls with the direction of travel
+      if (ghostRef.current) {
+        animate(ghostRef.current, {
+          opacity: [0.15, 1],
+          translateY: [24 * dir, 0],
+          duration: 820,
+          ease: "outExpo",
+        });
+      }
+    }
+
+    const note = readoutRef.current;
+    if (!note) return;
+
+    // the very first note waits for the chips to land; every one after it starts
+    // at once, because the scroll has already done the waiting
+    const lead = locked ? 900 : 0;
+
+    animate(Array.from(note.querySelectorAll(".js-wipe")), {
+      scaleX: [0, 1],
+      duration: 520,
+      delay: lead,
+      ease: "outExpo",
+    });
+
+    animate(Array.from(note.querySelectorAll(".js-slide")), {
+      opacity: [0, 1],
+      translateX: [-14, 0],
+      duration: 560,
+      delay: lead + 40,
+      ease: "outExpo",
+    });
+
+    animate(Array.from(note.querySelectorAll(".js-word")), {
+      translateY: ["112%", "0%"],
+      opacity: [0, 1],
+      duration: 620,
+      delay: stagger(38, { start: lead + 80 }),
+      ease: "outExpo",
+    });
+
+    animate(Array.from(note.querySelectorAll(".js-fade")), {
+      opacity: [0, 1],
+      translateY: [14, 0],
+      duration: 640,
+      delay: stagger(80, { start: lead + 230 }),
+      ease: "outQuart",
+    });
+
+    animate(Array.from(note.querySelectorAll(".js-pop")), {
+      opacity: [0, 1],
+      translateX: [-8, 0],
+      duration: 560,
+      delay: lead + 330,
+      ease: "outExpo",
+    });
+  }, [index, reduce]);
+
+  // A click on a square scrolls the stage until that square is the head, so
+  // the pipeline can be walked in either direction, not just read downward.
+  const selectMove = useCallback(
+    (order: number) => {
+      const wrap = wrapRef.current;
+      if (!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      const span = rect.height - window.innerHeight; // the pinned distance
+      const top =
+        window.scrollY + rect.top + span * (order / (STEPS.length - 1));
+      window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+    },
+    [reduce],
+  );
+
+  return (
+    <section id="platform" className="relative surface-ink text-paper">
+      {/* chapter rule — the last static thing before the stage pins */}
+      <div className="px-[var(--gutter)] pt-[clamp(46px,9vh,100px)]">
+        <div className="flex items-baseline justify-between border-t border-paper/15 pt-4">
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/40">
+            Chapter 02 — Method
+          </span>
+          <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/40 sm:block">
+            Five moves, one workspace
+          </span>
+        </div>
+      </div>
+
+      {/* ---- the pinned stage ---------------------------------------------
+        * The wrapper is exactly as tall as the travel; everything inside sticks
+        * for all of it, so the board never leaves the screen while the
+        * pipeline moves through it. */}
+      <div
+        ref={wrapRef}
+        className={
+          "method3d" +
+          (reduce ? " method3d--still" : "") +
+          (armed && !reduce ? " method3d--armed" : "") +
+          " h-[340svh] md:h-[460svh]"
+        }
+      >
+        <div className="sticky top-0 flex h-[100svh] items-center px-[var(--gutter)]">
+          <div ref={sceneRef} className="method3d__stage">
+            {/* The plate: a hairline frame, a crosshair at each corner and a
+                figure number in the margin. Small thing, but it turns the
+                section into a drawn figure instead of a block of a website. */}
+            <span className="method3d__frame" aria-hidden="true" />
+            <span className="method3d__mark method3d__mark--tl" aria-hidden="true" />
+            <span className="method3d__mark method3d__mark--tr" aria-hidden="true" />
+            <span className="method3d__mark method3d__mark--bl" aria-hidden="true" />
+            <span className="method3d__mark method3d__mark--br" aria-hidden="true" />
+            <span className="method3d__fig" aria-hidden="true">
+              Fig. 02 — pipeline
+            </span>
+
+            {/* the chapter, held still the whole way */}
+            <header className="method3d__head">
+              <h2 className="method3d__h2">
+                {/* two masked lines rather than one string: the title is
+                    climbed out of its own masks on the boot pass, which is the
+                    same gesture the manifesto uses, so the plate belongs to the
+                    page instead of being a widget dropped onto it */}
+                <span className="method3d__h2mask" aria-hidden="true">
+                  <span className="method3d__h2line">From brief to</span>
+                </span>{" "}
+                <span className="method3d__h2mask" aria-hidden="true">
+                  <span className="method3d__h2line italic text-accent-soft">
+                    a human decision.
+                  </span>
+                </span>
+                <span className="sr-only">
+                  From brief to a human decision.
+                </span>
+              </h2>
+              <p className="method3d__intro">
+                One workspace for the whole role — five moves, four phases.
+              </p>
+            </header>
+
+            {/* ---- the phase rail: where in the process, not just which
+                   square is lit ---- */}
+            <div className="method3d__rail" aria-hidden="true">
+              {PHASES.map((phase) => {
+                const owns = PHASE_OF.lastIndexOf(phase.label);
+                return (
+                  <span
+                    key={phase.label}
+                    className={
+                      "method3d__seg" +
+                      (PHASE_OF[index] === phase.label
+                        ? " method3d__seg--now"
+                        : "") +
+                      (index > owns ? " method3d__seg--done" : "")
+                    }
+                    style={{ flexGrow: phase.span }}
+                  >
+                    <span className="method3d__seglabel">{phase.label}</span>
+                    <span className="method3d__segline" />
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* ---- the body: the diagram, and the note that explains it ---- */}
+            <div className="method3d__body">
+              <div className="method3d__scene">
+                {/* The move number set enormous behind the board, struck as an
+                    outline rather than filled. It is the one element on the
+                    plate with real size, and it rolls over as the head changes. */}
+                <span className="method3d__ghost" aria-hidden="true">
+                  <motion.span
+                    className="method3d__ghostdrift"
+                    style={{ y: ghostDrift }}
+                  >
+                    <span ref={ghostRef} className="method3d__ghostnum">
+                      {step.no}
+                    </span>
+                  </motion.span>
+                </span>
+
+                <motion.div
+                  className="method3d__board"
+                  style={
+                    reduce
+                      ? { rotateX: 7, rotateY: -3 }
+                      : {
+                          rotateX: tiltX,
+                          rotateY: tiltY,
+                          x: panX,
+                          z: boardZ,
+                          scale: boardScale,
+                        }
+                  }
+                >
+                  {/* a hairline grid under the chips — this is what sells the
+                      tilt as a surface rather than a stack of boxes */}
+                  <span
+                    ref={floorRef}
+                    className="method3d__floor"
+                    aria-hidden="true"
+                  />
+
+                  {/* the axis. Only the single desktop row can be threaded, so
+                      this layer switches off below 1024px rather than lying
+                      under chips it no longer connects. */}
+                  <span className="method3d__wires" aria-hidden="true">
+                    {STEPS.slice(1).map((_, rod) => (
+                      <Method3DRod
+                        key={rod}
+                        order={rod}
+                        progress={travel}
+                        still={!!reduce}
+                      />
+                    ))}
+                    <motion.span
+                      ref={tokenRef}
+                      className="method3d__token"
+                      style={{ left: tokenLeft }}
+                    />
+                  </span>
+
+                  <ul className="method3d__grid">
+                    {STEPS.map((item, i) => (
+                      <Method3DNode
+                        key={item.no}
+                        step={item}
+                        order={i}
+                        progress={travel}
+                        active={i === index}
+                        past={i < index}
+                        still={!!reduce}
+                        onSelect={selectMove}
+                      />
+                    ))}
+                  </ul>
+                </motion.div>
+              </div>
+
+              {/* ---- the note: the head of the pipeline, explained ---- */}
+              <div ref={readoutRef} className="method3d__note">
+                {/* drawn from the diagram into the note, so the two are one
+                    sentence rather than two unrelated panels */}
+                <span
+                  className="method3d__leader js-wipe"
+                  aria-hidden="true"
+                />
+
+                <div className="method3d__keyline js-slide">
+                  <span className="method3d__keyno">Move {step.no}</span>
+                  <span className="method3d__keyrule js-wipe" />
+                  <span className="method3d__keyphase">{step.stage}</span>
+                </div>
+
+                {/* The title is split per word so anime can lift it out of its
+                    masks, but the plain string is what a screen reader gets. */}
+                <h3 className="method3d__title">
+                  <span className="sr-only">{step.title}</span>
+                  <span aria-hidden="true" className="method3d__words">
+                    {step.title.split(" ").map((word, key) => (
+                      <span key={key} className="method3d__word">
+                        <span className="js-word">{word}</span>
+                      </span>
+                    ))}
+                  </span>
+                </h3>
+
+                <p className="method3d__copy js-fade">{step.copy}</p>
+
+                <div className="method3d__facts">
+                  <span className="method3d__outcome js-pop">
+                    <span className="method3d__outdot" aria-hidden="true" />
+                    {step.outcome}
+                  </span>
+                  <span className="method3d__meta js-fade">
+                    {step.meta.join(" · ")}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* ---- the ruler: how far along, and which move is the head ---- */}
+            <div className="method3d__ruler">
+              <span className="method3d__hint">Scroll to travel</span>
+              <span className="method3d__pips">
+                {/* the thread runs the whole rail at the rate of the scroll, so
+                    the tick marks are a scale and this is the measurement */}
+                <motion.span
+                  className="method3d__thread"
+                  style={{ scaleX: travel }}
+                  aria-hidden="true"
+                />
+                {STEPS.map((item, i) => (
+                  <span
+                    key={item.no}
+                    className={`method3d__pip${i <= index ? " method3d__pip--lit" : ""}${
+                      i === index ? " method3d__pip--head" : ""
+                    }`}
+                  />
+                ))}
+              </span>
+              <span className="method3d__count">
+                {step.no} / {String(STEPS.length).padStart(2, "0")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ==========================================================================
+ *  9. CHAPTER 03 — THE SHORTLIST
+ *  A paper break after a dark screen. Left: the argument in one line.
+ *  Right: the artefact itself — a shortlist card whose score bars draw
+ *  themselves the first time they're seen.
+ * ========================================================================== */
+
+// One candidate row inside the card: name + score, context, hairline bar.
+// (No portrait — the shortlist reads as a written record, not a pile of faces.)
+function CandidateRow({
+  name,
+  role,
+  score,
+  index,
+}: (typeof CANDIDATES)[number] & { index: number }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const seen = useInView(ref, { once: true, amount: 0.5 });
+
+  return (
+    <div
+      ref={ref}
+      className="border-t border-ink/10 py-[clamp(10px,1.3vh,15px)] first:border-t-0"
+    >
+      <div className="min-w-0">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="truncate font-display text-[clamp(1rem,1.4vw,1.22rem)] leading-tight tracking-[-0.02em]">
+            {name}
+          </p>
+          <span className="shrink-0 font-display text-[clamp(0.95rem,1.3vw,1.15rem)] leading-none tabular-nums">
+            {score}
+          </span>
+        </div>
+        <p className="mt-[2px] truncate font-mono text-[8.5px] uppercase tracking-[0.14em] text-muted">
+          {role}
+        </p>
+        {/* score bar — a hairline that fills to the score on first view */}
+        <div className="mt-[7px] h-px w-full bg-ink/12">
+          <motion.div
+            className="h-px origin-left bg-accent"
+            initial={{ scaleX: 0 }}
+            animate={seen ? { scaleX: score / 100 } : { scaleX: 0 }}
+            transition={{ duration: 1.05, delay: 0.12 + index * 0.09, ease: EXPO_EASE }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Shortlist() {
+  // The sheet is taped up at an angle, so the tilt has to be gentler on a
+  // phone — a wide rotation would push its corners past the page gutter.
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(min-width: 640px)");
+    const sync = () => setWide(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
+  const tilt = wide ? -5.5 : -2.5;
+
+  return (
+    <section
+      id="teams"
+      // The card inside is rotated, and a rotated box is wider than the box it
+      // was laid out in: at phone width those two stray pixels were enough to
+      // give the page a sideways scrollbar. Clipping the axis the tilt crosses
+      // keeps the vertical shadows and tape intact.
+      className="relative surface-paper overflow-x-clip px-[var(--gutter)] py-[clamp(56px,11vh,140px)] text-ink"
+    >
+      {/* chapter rule */}
+      <div className="flex items-baseline justify-between border-t border-ink/15 pb-[clamp(26px,5vh,54px)] pt-4">
+        <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted">
+          Chapter 03 — Candidate intelligence
+        </span>
+        <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted md:block">
+          Fig. 03
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-[clamp(32px,5vw,72px)] lg:grid-cols-12">
+        {/* the argument */}
+        <div className="lg:col-span-5">
+          <h2 className="font-display text-[clamp(2.1rem,4.6vw,3.9rem)] leading-[1.0] tracking-[-0.035em]">
+            A focused shortlist.{" "}
+            <span className="italic text-accent">Not a pile of profiles.</span>
+          </h2>
+          <p className="mt-6 max-w-[38ch] text-[clamp(0.9rem,1.1vw,1.02rem)] leading-[1.65] text-muted">
+            Every name arrives with its evidence — role fit, experience, intent
+            and verification. Short enough to read in one sitting.
+          </p>
+          <a href="#platform" className="btn-ink mt-8">
+            Walk through a candidate
+            <Arrow size={11} />
+          </a>
+        </div>
+
+        {/* the artefact — a shortlist taped to a wall, sitting slightly askew */}
+        <div className="relative lg:col-span-7">
+          <div className="relative mx-auto w-full max-w-[600px] px-2 py-7 sm:px-6">
+            {/* two translucent strips holding the sheet up */}
+            <span aria-hidden="true" className="note-tape note-tape--left" />
+            <span aria-hidden="true" className="note-tape note-tape--right" />
+
+            <motion.div
+              initial={{ opacity: 0, y: 34, rotate: tilt - 4 }}
+              whileInView={{ opacity: 1, y: 0, rotate: tilt }}
+              whileHover={{ rotate: -0.5, y: -10 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 1, ease: EXPO_EASE }}
+              className="relative border border-ink/10 bg-white px-[clamp(14px,2vw,26px)] py-[clamp(14px,2vw,22px)] shadow-[0_26px_60px_-26px_rgba(0,0,0,0.45)]"
+            >
+              {/* window chrome — reads as a product surface, not a screenshot */}
+              <div className="flex items-center justify-between gap-3 border-b border-ink/12 pb-3">
+                <div className="flex items-center gap-1.5" aria-hidden="true">
+                  <span className="h-1.5 w-1.5 rounded-full bg-ink/15" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-ink/15" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-accent/70" />
+                </div>
+                <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-muted">
+                  Workspace · Shortlist
+                </span>
+                <span className="shrink-0 font-mono text-[8px] uppercase tracking-[0.2em] text-accent">
+                  Evidence attached
+                </span>
+              </div>
+
+              {/* which role this shortlist belongs to */}
+              <div className="flex items-baseline justify-between gap-4 border-b border-ink/12 py-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-[8.5px] uppercase tracking-[0.2em] text-muted">
+                    Shortlist
+                  </p>
+                  <p className="mt-1 truncate font-display text-[clamp(0.95rem,1.3vw,1.1rem)] leading-tight">
+                    Product design lead · Bengaluru / hybrid
+                  </p>
+                </div>
+                <span className="shrink-0 font-mono text-[8.5px] uppercase tracking-[0.18em] text-muted">
+                  3 of 8
+                </span>
+              </div>
+
+              <div className="pt-1">
+                {CANDIDATES.map((person, index) => (
+                  <CandidateRow key={person.name} {...person} index={index} />
+                ))}
+              </div>
+
+              <p className="mt-2 border-t border-ink/12 pt-3 font-mono text-[8.5px] uppercase tracking-[0.16em] text-muted">
+                + 5 more, each with a written rationale
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* what stays attached to every recommendation — four numbered icons */}
+      <dl className="mt-[clamp(40px,8vh,88px)] grid grid-cols-1 gap-x-8 gap-y-[clamp(24px,3.4vh,36px)] border-t border-ink/15 pt-[clamp(20px,4vh,34px)] sm:grid-cols-2 lg:grid-cols-4">
+        {EVIDENCE.map((item, index) => (
+          <div key={item.label} className="group">
+            <div className="flex items-center justify-between gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/15 text-ink/50 transition-colors duration-500 group-hover:border-accent group-hover:text-accent">
+                <Glyph name={item.icon} />
+              </span>
+              <span className="font-mono text-[8.5px] tabular-nums text-accent">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            </div>
+            <dt className="mt-4 font-display text-[clamp(1.05rem,1.5vw,1.3rem)] leading-tight tracking-[-0.02em]">
+              {item.label}
+            </dt>
+            <dd className="mt-2 max-w-[30ch] text-[clamp(0.8rem,0.95vw,0.88rem)] leading-[1.6] text-muted">
+              {item.note}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/* ==========================================================================
+ *  10. CHAPTER 04 — THE FLOW
+ *  The technical drawing of the page: inputs → workspace → outputs, as three
+ *  ruled columns. The connectors are SVG paths whose `pathLength` is fed by
+ *  one scroll value, so the diagram draws itself as it comes into view rather
+ *  than appearing complete. On a phone the whole grid stacks and the same
+ *  arrows rotate 90° — no second layout to maintain.
+ *
+ *  The middle column is printed on paper while the two around it stay in ink.
+ *  It is the only light surface in the chapter, so the eye lands on the
+ *  workspace — the thing being sold — and the columns either side read as what
+ *  feeds it and what it leaves behind, rather than as three equal piles.
+ * ========================================================================== */
+
+// One arrow between two columns. `pathLength` is the only animated property,
+// so the line draws from tail to head without any dash maths of our own.
+function FlowArrow({ progress }: { progress: MotionValue<number> }) {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex h-11 items-center justify-center self-center md:h-auto"
+    >
+      <svg
+        viewBox="0 0 46 10"
+        fill="none"
+        className="h-2.5 w-10 rotate-90 text-paper/45 md:rotate-0"
+      >
+        {/* the tail is always there, faint — the head is what gets drawn */}
+        <path
+          d="M0 5h34"
+          stroke="currentColor"
+          strokeWidth="1"
+          strokeDasharray="2 3"
+          opacity="0.4"
+        />
+        <motion.path
+          d="M32 1.5 38.5 5 32 8.5"
+          stroke="currentColor"
+          strokeWidth="1"
+          style={{ pathLength: progress }}
+        />
+      </svg>
+    </div>
+  );
+}
+
+function Flow() {
+  const diagramRef = useRef<HTMLDivElement | null>(null);
+
+  // The window is deliberately long: the connectors are still drawing while
+  // the diagram is comfortably on screen, never snapping in at the edge.
+  const { scrollYProgress } = useScroll({
+    target: diagramRef,
+    offset: ["start 0.85", "end 0.55"],
+  });
+  const draw = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 26,
+    mass: 0.4,
+  });
+
+  return (
+    <section
+      id="flow"
+      className="relative surface-ink px-[var(--gutter)] py-[clamp(52px,9vh,116px)] text-paper"
+    >
+      {/* chapter rule */}
+      <div className="flex items-baseline justify-between border-t border-paper/15 pt-4">
+        <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/40">
+          Chapter 04 — The flow
+        </span>
+        <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/40 sm:block">
+          Fig. 04
+        </span>
+      </div>
+
+      <div className="mt-[clamp(24px,4.5vh,56px)] grid grid-cols-1 gap-[clamp(18px,3vw,48px)] lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <h2 className="max-w-[18ch] font-display text-[clamp(1.85rem,3.4vw,3rem)] leading-[1.05] tracking-[-0.035em]">
+            A role moves through{" "}
+            <span className="italic text-accent-soft">three rooms.</span>
+          </h2>
+        </div>
+        <div className="lg:col-span-7">
+          <p className="max-w-[46ch] text-[clamp(0.86rem,1.02vw,0.96rem)] leading-[1.7] text-paper/55">
+            Inputs arrive, the workspace turns them into evidence, and your team
+            keeps the decision and the trail.
+          </p>
+        </div>
+      </div>
+
+      {/* ---------- the diagram ---------- */}
+      <div
+        ref={diagramRef}
+        className="mt-[clamp(26px,4.5vh,58px)] grid grid-cols-1 items-stretch gap-x-[clamp(8px,1.4vw,22px)] gap-y-1 md:grid-cols-[1fr_auto_1fr_auto_1fr]"
+      >
+        {FLOW.map((column, columnIndex) => {
+          // The hub is the workspace. Everything else in this chapter is ink,
+          // so the one light surface in the middle is where the eye goes.
+          const hub = columnIndex === 1;
+
+          return (
+            <Fragment key={column.label}>
+              <div
+                className={`min-w-0 py-[clamp(16px,1.9vw,24px)] ${
+                  hub
+                    ? "bg-paper px-[clamp(14px,1.6vw,22px)] text-ink"
+                    : "px-0"
+                }`}
+              >
+                <div
+                  className={`flex items-baseline justify-between gap-3 border-b pb-2 ${
+                    hub ? "border-ink/20" : "border-paper/15"
+                  }`}
+                >
+                  <span
+                    className={`font-mono text-[9px] uppercase tracking-[0.22em] ${
+                      hub ? "text-ink" : "text-paper/85"
+                    }`}
+                  >
+                    <span className={hub ? "text-ink/40" : "text-paper/35"}>
+                      {column.no}
+                    </span>{" "}
+                    {column.label}
+                  </span>
+                  <span
+                    className={`hidden font-mono text-[8px] uppercase tracking-[0.16em] sm:block ${
+                      hub ? "text-muted" : "text-paper/40"
+                    }`}
+                  >
+                    {column.caption}
+                  </span>
+                </div>
+
+                {/* one sentence, so the column says what it is before it
+                    starts listing what it holds */}
+                <p
+                  className={`mt-2.5 max-w-[42ch] text-[clamp(0.78rem,0.94vw,0.87rem)] leading-[1.6] ${
+                    hub ? "text-ink/65" : "text-paper/55"
+                  }`}
+                >
+                  {column.line}
+                </p>
+
+                <ul className="mt-[clamp(10px,1.6vh,18px)]">
+                  {column.blocks.map((block, blockIndex) => (
+                    <motion.li
+                      key={block.title}
+                      initial={{ opacity: 0, y: 14 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.4 }}
+                      transition={{
+                        duration: 0.6,
+                        delay: columnIndex * 0.08 + blockIndex * 0.05,
+                        ease: EXPO_EASE,
+                      }}
+                      className={`border-t py-3 ${
+                        hub ? "border-ink/10" : "border-paper/10"
+                      }`}
+                    >
+                      <div className="flex items-baseline gap-2.5">
+                        <span
+                          className={`font-mono text-[8px] tabular-nums ${
+                            hub ? "text-ink/30" : "text-paper/30"
+                          }`}
+                        >
+                          {String(blockIndex + 1).padStart(2, "0")}
+                        </span>
+                        <p
+                          className={`font-display text-[clamp(0.98rem,1.35vw,1.2rem)] leading-tight tracking-[-0.012em] ${
+                            hub ? "text-ink" : "text-paper"
+                          }`}
+                        >
+                          {block.title}
+                        </p>
+                      </div>
+                      <p
+                        className={`mt-1 pl-6 font-mono text-[8px] uppercase leading-[1.5] tracking-[0.14em] ${
+                          hub ? "text-muted" : "text-paper/55"
+                        }`}
+                      >
+                        {block.note}
+                      </p>
+                    </motion.li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* arrow to the next column — rotated when the grid stacks */}
+              {columnIndex < FLOW.length - 1 && <FlowArrow progress={draw} />}
+            </Fragment>
+          );
+        })}
+      </div>
+
+      {/* ---------- the loop back ---------- */}
+      <div className="mt-[clamp(22px,4vh,40px)] flex flex-col gap-2 border-t border-dashed border-paper/20 pt-3 sm:flex-row sm:items-baseline sm:justify-between">
+        <span className="font-mono text-[9px] uppercase leading-[1.6] tracking-[0.18em] text-paper/50">
+          ↺ Thin evidence? Back to the interview — not back to the pile.
+        </span>
+        <span className="hidden font-mono text-[9px] uppercase tracking-[0.18em] text-paper/30 sm:block">
+          Fig. 04 — How a role moves
+        </span>
+      </div>
+    </section>
+  );
+}
+
+/* ==========================================================================
+ *  11. CHAPTER 05 — WHERE IT LANDS
+ *  Two counter-scrolling marquees of enormous display type. The reference
+ *  site does this with its bread names; here it's the functions we hire
+ *  for, which also quietly answers "is this only for engineers?".
+ * ========================================================================== */
+
+function Roles() {
+  // Four copies per band so a -25% loop is seamless at any viewport width.
+  const band = [...ROLES, ...ROLES, ...ROLES, ...ROLES];
+
+  return (
+    <section
+      id="talent"
+      className="relative overflow-hidden surface-paper-deep py-[clamp(44px,8vh,100px)] text-ink"
+    >
+      <div className="flex items-baseline justify-between px-[var(--gutter)]">
+        <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted">
+          Chapter 05 — Where it lands
+        </span>
+        <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-muted sm:block">
+          Every function, not just tech
+        </span>
+      </div>
+
+      <div className="mt-[clamp(22px,4vh,44px)]">
+        <div className="roles__row">
+          <div className="roles__track">
+            {band.map((role, index) => (
+              <span key={`a-${role}-${index}`} className="roles__word">
+                {role}
+                <i className="roles__dot" aria-hidden="true">
+                  ·
+                </i>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="roles__row roles__row--outline">
+          <div className="roles__track roles__track--reverse">
+            {band.map((role, index) => (
+              <span key={`b-${role}-${index}`} className="roles__word">
+                {role}
+                <i className="roles__dot" aria-hidden="true">
+                  ·
+                </i>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-[clamp(26px,5vh,56px)] flex flex-col gap-5 px-[var(--gutter)] md:flex-row md:items-end md:justify-between">
+        <p className="max-w-[40ch] text-[clamp(0.9rem,1.1vw,1.02rem)] leading-[1.65] text-muted">
+          Engineering, design, product, research, data, operations, finance.
+          Same evidence, every function.
+        </p>
+        <a
+          href="#contact"
+          className="group inline-flex shrink-0 items-center gap-2 font-mono text-[9.5px] uppercase tracking-[0.22em] text-ink"
+        >
+          Talk about a role
+          <span className="transition-transform duration-500 group-hover:translate-x-1">
+            <Arrow size={11} />
+          </span>
+        </a>
+      </div>
+    </section>
+  );
+}
+
+/* ==========================================================================
+ *  12. CHAPTER 06 — THE CLOSE + FOOTER
+ *  One statement, two ways in (book, or write), then the site's spine:
+ *  client marks, link columns, and the wordmark bleeding off the bottom.
+ * ========================================================================== */
+
+// The legal strip along the very bottom of the page. Kept separate from the
+// footer columns because these four are the only links that are never
+// decorative — they have to be present on every screen size.
+const LEGAL_BAR_LINKS = [
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Cookies", href: "/cookies" },
+  { label: "Data rights", href: "/data-rights" },
+];
+
+// One anchor, two behaviours. `/route` hrefs become Link (client-side jump,
+// prefetched while visible — no document reload); `#section` and `mailto:`
+// hrefs stay plain <a> because they never leave the page or the app anyway.
+function FooterLink({
+  href,
+  className,
+  children,
+}: {
+  href: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  if (!href.startsWith("/")) return <a href={href} className={className}>{children}</a>;
+  return <Link href={href} className={className}>{children}</Link>;
+}
+
+// Footer link columns — kept out of the JSX so the markup stays structural.
+// Company and Legal point at real routes now (about, careers and the DPDP
+// set); the product column keeps its in-page anchors.
+const FOOTER_COLUMNS = [
+  {
+    title: "Explore",
+    links: [
+      { label: "Workspace", href: "#platform" },
+      { label: "Shortlist", href: "#teams" },
+      { label: "Flow", href: "#flow" },
+      { label: "Roles", href: "#talent" },
+      { label: "Method", href: "#method" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "/about" },
+      { label: "Careers", href: "/careers" },
+      { label: "Press", href: "#contact" },
+      { label: "Contact", href: "mailto:hello@recruitailabs.in" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy", href: "/privacy" },
+      { label: "Cookies", href: "/cookies" },
+      { label: "Terms", href: "/terms" },
+      { label: "Data rights", href: "/data-rights" },
+    ],
+  },
+];
+
+function Close() {
+  return (
+    <footer id="contact" className="relative overflow-hidden surface-ink-deep text-paper">
+      {/* --- the ask --- */}
+      <div className="px-[var(--gutter)] pt-[clamp(56px,11vh,132px)]">
+        <div className="flex items-baseline justify-between border-t border-paper/15 pt-4">
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/40">
+            Chapter 06 — Next
+          </span>
+          <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/40">
+            Est. 2026
+          </span>
+        </div>
+
+        <h2 className="mt-[clamp(26px,5vh,58px)] max-w-[22ch] font-display text-[clamp(2.3rem,6.4vw,5.6rem)] leading-[0.95] tracking-[-0.04em]">
+          Your next hire deserves{" "}
+          <span className="italic text-accent-soft">the whole picture.</span>
+        </h2>
+
+        <p className="mt-[clamp(16px,2.4vh,26px)] max-w-[36ch] text-[clamp(0.9rem,1.1vw,1.02rem)] leading-[1.65] text-paper/50">
+          Send us the role you are finding hardest, and we will walk the
+          workspace end to end with you.
+        </p>
+
+        <div className="mt-[clamp(24px,4vh,44px)] flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+          <PendingLink
+            href="/sign-up"
+            className="btn-primary justify-center"
+            pending={<CtaPending />}
+            swapGlyph
+          >
+            Create account
+            <Arrow size={12} />
+          </PendingLink>
+          <a href="mailto:hello@recruitailabs.in" className="btn-outline justify-center">
+            hello@recruitailabs.in
+          </a>
+        </div>
+      </div>
+
+      {/* --- statement strip, in place of client logos --- */}
+      <div className="mt-[clamp(44px,8vh,96px)] border-y border-paper/12 px-[var(--gutter)] py-[clamp(16px,2.6vh,26px)]">
+        <p className="max-w-[46ch] font-display text-[clamp(1.05rem,1.9vw,1.45rem)] leading-[1.35] tracking-[-0.02em] text-paper/45">
+          Built for the people behind every hire. The judgement stays human.
+        </p>
+      </div>
+
+      {/* --- footer grid --- */}
+      <div className="grid grid-cols-2 gap-x-6 gap-y-[clamp(24px,4vh,40px)] px-[var(--gutter)] py-[clamp(28px,5vh,56px)] md:grid-cols-3 lg:grid-cols-5">
+        <div className="col-span-2 md:col-span-1">
+          <p className="font-display text-[1.05rem] tracking-[-0.01em]">
+            Recruit AI
+            <sup className="ml-0.5 align-super font-mono text-[8px]">™</sup>
+          </p>
+          <p className="mt-2 max-w-[26ch] font-mono text-[9px] uppercase leading-[1.8] tracking-[0.14em] text-paper/40">
+            Sourcing, interviews, evidence and verification in one calm workspace.
+          </p>
+        </div>
+
+        {FOOTER_COLUMNS.map((column) => (
+          <div key={column.title}>
+            <p className="font-mono text-[8.5px] uppercase tracking-[0.22em] text-paper/35">
+              {column.title}
+            </p>
+            <ul className="mt-3 space-y-1.5">
+              {column.links.map((link) => (
+                <li key={link.label}>
+                  <FooterLink
+                    href={link.href}
+                    className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-paper/70 transition-colors duration-300 hover:text-paper"
+                  >
+                    {link.label}
+                  </FooterLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+
+        <div>
+          <p className="font-mono text-[8.5px] uppercase tracking-[0.22em] text-paper/35">
+            Studio
+          </p>
+          <ul className="mt-3 space-y-1.5 font-mono text-[9.5px] uppercase tracking-[0.14em] text-paper/70">
+            <li>Bengaluru · Remote</li>
+            <li>Mon–Fri 09:00–18:00 IST</li>
+            <li>
+              <a href="mailto:hello@recruitailabs.in" className="hover:text-paper">
+                hello@recruitailabs.in
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* --- wordmark, bleeding off the bottom edge --- */}
+      <div className="relative overflow-hidden px-[var(--gutter)]">
+        <span aria-hidden="true" className="footer-wordmark block select-none">
+          Recruit AI
+        </span>
+      </div>
+
+      {/* --- legal bar --- */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-paper/12 px-[var(--gutter)] py-4">
+        <span className="font-mono text-[8.5px] uppercase tracking-[0.18em] text-paper/35">
+          © 2026 Recruit AI Labs — All rights reserved
+        </span>
+
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          {LEGAL_BAR_LINKS.map((link) => (
+            <FooterLink
+              key={link.label}
+              href={link.href}
+              className="font-mono text-[8.5px] uppercase tracking-[0.18em] text-paper/50 transition-colors duration-300 hover:text-paper"
+            >
+              {link.label}
+            </FooterLink>
+          ))}
+          <button
+            type="button"
+            onClick={openConsentPreferences}
+            className="font-mono text-[8.5px] uppercase tracking-[0.18em] text-paper/50 transition-colors duration-300 hover:text-paper"
+          >
+            Cookie preferences
+          </button>
+        </div>
+
+        <span className="font-mono text-[8.5px] uppercase tracking-[0.18em] text-paper/35">
+          Made with intent
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+/* ==========================================================================
+ *  7. HERO — pinned stage with scroll-linked minimise
+ *  The still sits on an inset "plate" (paper margin all round, like a print
+ *  on a mat). Three things happen here:
+ *    1. on `intro` the plate clips open and the copy lifts        (anime.js)
+ *    2. the image drifts with the pointer                         (framer)
+ *    3. on scroll the plate scales 1 → 0.56, rounds off, lifts and picks up
+ *       a shadow — the plate "minimises" into a card while the copy and the
+ *       navigation dissolve above it                              (framer)
+ *  The whole hero is sticky inside a 180svh wrapper, so this shrink is bound
+ *  to scroll position: scroll back up and the card grows back to full bleed.
+ * ========================================================================== */
+
+function Hero({
+  intro,
+  onMediaReady,
+}: {
+  intro: boolean;
+  onMediaReady: () => void;
+}) {
+  const reduce = useReducedMotion();
+
+  // Raw pointer position (-1 → 1 on both axes).
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+
+  // Springs turn that raw value into weight — the plate lags slightly
+  // behind the cursor instead of tracking it 1:1.
+  const smoothX = useSpring(pointerX, { stiffness: 46, damping: 16, mass: 0.7 });
+  const smoothY = useSpring(pointerY, { stiffness: 46, damping: 16, mass: 0.7 });
+
+  // Two different amplitudes: the plate moves more than the type (depth).
+  const mediaX = useTransform(smoothX, [-1, 1], [22, -22]);
+  const mediaY = useTransform(smoothY, [-1, 1], [16, -16]);
+  const titleX = useTransform(smoothX, [-1, 1], [-7, 7]);
+
+  /* ---- scroll progress -------------------------------------------------
+   * `wrapRef` is the 180svh stage. offset ["start start", "end end"] means:
+   *   0 → when the stage top hits the top of the viewport
+   *   1 → when the stage bottom hits the bottom of the viewport
+   * which is exactly the 80svh the sticky hero stays pinned for. So progress
+   * reaches 1 on the same frame the hero releases and the next section
+   * takes over. Nothing is time-based; the user's scroll is the clock.      */
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: wrapRef,
+    offset: ["start start", "end end"],
+  });
+
+  // Reduced motion: pin every scroll-linked value at 0 (no shrink at all).
+  const still = useMotionValue(0);
+  const progress = reduce ? still : scrollYProgress;
+
+  // The minimise itself — four properties on one element.
+  const plateScale = useTransform(progress, [0, 1], [1, 0.56]);
+  const plateY = useTransform(progress, [0, 1], ["0vh", "-3.5vh"]);
+  const plateRadius = useTransform(progress, [0, 0.8], ["2px", "26px"]);
+  const plateShadow = useTransform(
+    progress,
+    [0, 0.85],
+    ["0px 0px 0px rgba(0,0,0,0)", "0px 46px 120px rgba(0,0,0,0.42)"],
+  );
+
+  // Copy leaves first (by 34%), chrome second (by 20%), dim last.
+  const copyOpacity = useTransform(progress, [0, 0.34], [1, 0]);
+  const copyY = useTransform(progress, [0, 0.34], [0, -46]);
+  const chromeOpacity = useTransform(progress, [0, 0.2], [1, 0]);
+  const scrimOpacity = useTransform(progress, [0, 1], [0, 0.35]);
+
+  // ---- intro: masked line lift, then supporting copy ----
+  // Runs once, when the curtain has finished clearing.
+  useEffect(() => {
+    if (!intro || reduce) return;
+
+    animate(".hero-line > span", {
+      // 148%, not 115%: the mask is padded for descenders now, so the line has
+      // to start further down or its top edge would peek into that padding.
+      translateY: ["148%", "0%"],
+      rotate: [5, 0],
+      duration: 1300,
+      delay: stagger(105, { start: 180 }), // 105ms between the three lines
+      ease: "outQuart",
+    });
+
+    animate("[data-anim='rise']", {
+      translateY: [26, 0],
+      opacity: [0, 1],
+      duration: 1000,
+      delay: stagger(90, { start: 820 }), // follows the headline
+      ease: "outCubic",
+    });
+  }, [intro, reduce]);
+
+  // Normalise the cursor to -1 → 1 inside the section.
+  const handleMove = (event: ReactMouseEvent<HTMLElement>) => {
+    if (reduce) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    pointerX.set(((event.clientX - rect.left) / rect.width) * 2 - 1);
+    pointerY.set(((event.clientY - rect.top) / rect.height) * 2 - 1);
+  };
+
+  // Elements animated by anime start transparent so there is no flash
+  // between mount and the intro. (anime writes inline opacity, which beats
+  // the utility class; with reduced motion the class is never applied.)
+  const rise = reduce ? "" : "opacity-0";
+
+  return (
+    /* ---- scroll stage ---------------------------------------------------
+     * 180svh tall: 100svh of hero + 80svh of runway. The section inside is
+     * sticky, so it stays pinned to the top of the viewport for exactly that
+     * runway while this wrapper scrolls past. That is what converts a scroll
+     * gesture into the minimise.
+     * ------------------------------------------------------------------- */
+    <div id="top" ref={wrapRef} className="relative h-[180svh] w-full">
+      <section
+        className="sticky top-0 z-0 h-[100svh] w-full overflow-hidden bg-paper text-ink"
+        onMouseMove={handleMove}
+        onMouseLeave={() => {
+          pointerX.set(0);
+          pointerY.set(0);
+        }}
+      >
+        <SiteNav intro={intro} progress={progress} />
+
+        {/* ---------- the plate ----------
+            One element carries the whole effect: scale, radius, lift and
+            shadow are all scroll-driven motion values, so there is no
+            re-render per frame — just a transform write. */}
+        <motion.div
+          className="absolute inset-x-[var(--gutter)] bottom-[var(--ticker-h)] top-[var(--nav-h)] overflow-hidden bg-ink-deep will-change-transform"
+          style={{
+            scale: plateScale, // 1 → 0.56 : full bleed becomes a card
+            y: plateY, // lifts a touch as it shrinks
+            borderRadius: plateRadius, // 2px → 26px : print becomes card
+            boxShadow: plateShadow, // gains depth once it lifts off
+          }}
+          animate={
+            intro
+              ? { clipPath: "inset(0% 0% 0% 0%)", opacity: 1 }
+              : { clipPath: "inset(7% 4% 7% 4%)", opacity: 0 }
+          }
+          transition={{ duration: 1.35, ease: EXPO_EASE }}
+        >
+          {/* the still, oversized by 4% so the parallax never exposes an edge.
+              One PNG through next/image: the server returns AVIF or WebP at
+              whatever width this viewport asks for, and `priority` puts it in
+              the first preload wave — so the plate is painted before the
+              curtain lifts and nothing has to be decoded at runtime.
+              Pinned right on phones: there the plate is far taller than the
+              artwork, and centre-cover would crop the circle away entirely. */}
+          <motion.div className="absolute inset-[-4%]" style={{ x: mediaX, y: mediaY }}>
+            <Image
+              src="/hero-plate.png"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="plate-drift object-cover object-right"
+              onLoad={onMediaReady}
+              onError={onMediaReady} // never trap the loader on a decode error
+            />
+          </motion.div>
+
+          {/* scrims: vignette for legibility, grain for texture */}
+          <div className="plate-vignette absolute inset-0" />
+          <div className="grain absolute inset-0" />
+
+          {/* extra dim that rises with scroll — the shrinking card settles
+              into a still frame instead of staying a bright rectangle */}
+          <motion.div
+            className="pointer-events-none absolute inset-0 bg-ink-deep"
+            style={{ opacity: scrimOpacity }}
+          />
+
+          {/* hairline frame, clipped by the plate's own radius */}
+          <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-paper/12" />
+
+          {/* ---------- plate contents ----------
+              The copy dissolves by 34% — long before the card is small —
+              so no headline is ever scaled down into unreadable type. */}
+          <motion.div
+            className="relative flex h-full flex-col justify-between p-[clamp(16px,2.4vw,38px)]"
+            style={{ opacity: copyOpacity, y: copyY }}
+          >
+            {/* head row */}
+            <div className="flex items-start justify-between gap-6">
+              <div className="flex items-center gap-2.5">
+                {/* pulsing accent dot = "live" */}
+                <span className="relative flex h-1.5 w-1.5 items-center justify-center">
+                  <span className="absolute h-1.5 w-1.5 animate-ping rounded-full bg-accent-soft" />
+                  <span className="relative h-1.5 w-1.5 rounded-full bg-accent-soft" />
+                </span>
+                <span className="font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/75">
+                  Recruitment intelligence
+                </span>
+              </div>
+              <span className="hidden font-mono text-[9.5px] uppercase tracking-[0.24em] text-paper/40 sm:block">
+                Sourcing · Interview · Verify
+              </span>
+            </div>
+
+            {/* foot row: headline (8 cols) + proof (4 cols) on desktop */}
+            <div className="grid grid-cols-1 items-end gap-[clamp(18px,3vw,44px)] lg:grid-cols-12">
+              <div className="lg:col-span-8">
+                <motion.h1 className="hero-title font-display text-paper" style={{ x: titleX }}>
+                  {/* each line = mask + inner span, the unit anime lifts */}
+                  <span className="hero-line">
+                    <span>Hire the right</span>
+                  </span>
+                  <span className="hero-line">
+                    <span className="italic text-paper/95">human.</span>
+                  </span>
+                  <span className="hero-line pl-[7%]">
+                    <span>
+                      Faster<span className="text-accent-soft">.</span>
+                    </span>
+                  </span>
+                </motion.h1>
+
+                {/* actions — full width on phones, natural width above 640px */}
+                <div
+                  data-anim="rise"
+                  className={`hero-actions mt-[clamp(16px,2.4vw,30px)] flex flex-wrap items-center gap-3 ${rise}`}
+                >
+                  <PendingLink
+                    href="/sign-in"
+                    className="btn-primary w-full justify-center sm:w-auto"
+                    pending={<CtaPending />}
+                    swapGlyph
+                  >
+                    Sign In
+                    <span aria-hidden="true">→</span>
+                  </PendingLink>
+                  <a
+                    href="#platform"
+                    className="btn-outline w-full justify-center sm:w-auto"
+                  >
+                    <i aria-hidden="true" />
+                    See the product
+                  </a>
+                </div>
+              </div>
+
+              <div className="hero-secondary lg:col-span-4">
+                {/* sub-copy: hidden on phones, present from 640px up */}
+                <p
+                  data-anim="rise"
+                  className={`hidden max-w-[34ch] text-[clamp(0.8rem,1.05vw,0.95rem)] leading-[1.6] text-paper/70 sm:block ${rise}`}
+                >
+                  Sourcing, interviews, evidence and verification in one
+                  workspace — so your team sees the whole person.
+                </p>
+
+                {/* the four stages, as a numbered strip */}
+                <ul
+                  data-anim="rise"
+                  className={`mt-[clamp(16px,2.2vw,26px)] hidden border-t border-paper/15 pt-4 sm:grid sm:grid-cols-2 sm:gap-x-4 sm:gap-y-3 ${rise}`}
+                >
+                  {STAGES.map((stage) => (
+                    <li key={stage.label} className="flex items-baseline gap-2">
+                      <span className="font-mono text-[8px] tabular-nums text-paper/35">
+                        {stage.no}
+                      </span>
+                      <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-paper/70">
+                        {stage.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* ---------- ticker strip under the plate ---------- */}
+        <motion.div
+          className="absolute inset-x-0 bottom-0 h-[var(--ticker-h)] border-t border-ink/12 bg-paper"
+          style={{ opacity: chromeOpacity }}
+        >
+          <div className="ticker flex h-full items-center overflow-hidden">
+            {/* four identical sets; CSS shifts the track by exactly one set */}
+            <div className="ticker__track">
+              {Array.from({ length: 4 }).flatMap((_, copy) =>
+                TICKER_WORDS.map((word) => (
+                  <span key={`${copy}-${word}`} className="ticker__item">
+                    {word}
+                  </span>
+                )),
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </section>
+    </div>
+  );
+}
+
+/* ==========================================================================
+ *  13. PAGE
+ *  Owns the load → intro handshake and the "media is ready" signal, then
+ *  stacks the five chapters in reading order.
+ * ========================================================================== */
+
+export default function Page() {
+  const [loading, setLoading] = useState(true); // curtain mounted?
+  const [intro, setIntro] = useState(false); // hero may animate in?
+  const [mediaReady, setMediaReady] = useState(false); // counter may finish?
+
+  // Safety valve: if the plate is slow (or blocked), the loader still ends.
+  useEffect(() => {
+    const fallback = window.setTimeout(() => setMediaReady(true), 2400);
+    return () => window.clearTimeout(fallback);
+  }, []);
+
+  // Stable callbacks: Loader's exit effect depends on `onComplete`.
+  const handleMediaReady = useCallback(() => setMediaReady(true), []);
+
+  const handleComplete = useCallback(() => {
+    setLoading(false);
+    setIntro(true);
+  }, []);
+
+  return (
+    <main className="relative">
+      {/* hero stays mounted underneath so the plate is already painted
+          when the curtain lifts */}
+      {loading && <Loader mediaReady={mediaReady} onComplete={handleComplete} />}
+
+      <Hero intro={intro} onMediaReady={handleMediaReady} />
+
+      {/* chapter 01 — the scroll-driven statement */}
+      <Manifesto />
+
+      {/* the backers strip — sits above chapter 02 */}
+      <SupportedBy />
+
+      {/* chapter 02 — the five moves as a 3D pipeline, travelled by scrolling */}
+      <Method />
+
+      {/* chapter 03 — the artefact and the evidence behind it */}
+      <Shortlist />
+
+      {/* chapter 04 — the block diagram of a role moving through the workspace */}
+      <Flow />
+
+      {/* chapter 05 — the giant roles marquee */}
+      <Roles />
+
+      {/* chapter 06 — the ask, then the footer */}
+      <Close />
+    </main>
+  );
+}
